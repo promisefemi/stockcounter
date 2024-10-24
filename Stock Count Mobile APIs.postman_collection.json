@@ -1,0 +1,421 @@
+{
+	"info": {
+		"_postman_id": "dc89223e-6e1f-4476-a6f5-485851c34e2e",
+		"name": "Stock Count Mobile APIs",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38742647"
+	},
+	"item": [
+		{
+			"name": "API Auth",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "ng102",
+							"type": "text"
+						},
+						{
+							"key": "password_hash",
+							"value": "password123",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BASE_URL}}apiauthenticate",
+					"host": [
+						"{{BASE_URL}}apiauthenticate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getActiveCountingSession",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "Wy9n7SnQCk27Huz0irpQTgEPm98G25BlYGzL8sE7",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "scadmin",
+							"type": "text"
+						},
+						{
+							"key": "password_hash",
+							"value": "password123",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BASE_URL}}api/getactivecountingsession",
+					"host": [
+						"{{BASE_URL}}api"
+					],
+					"path": [
+						"getactivecountingsession"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getWarehousesByPlantId",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "j6Hb6CFPg6pJM4iXGEQnGD6yC7WxyA8hfrMM7qP6",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "scadmin",
+							"type": "text"
+						},
+						{
+							"key": "password_hash",
+							"value": "password123",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BASE_URL}}api/getwarehousesbyplantid/1",
+					"host": [
+						"{{BASE_URL}}api"
+					],
+					"path": [
+						"getwarehousesbyplantid",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getlocationbywarehouseid",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "pYcmdDih814tDYkCXwiZII3YTNkCUaU9D1C1YaDF",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "scadmin",
+							"type": "text"
+						},
+						{
+							"key": "password_hash",
+							"value": "password123",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BASE_URL}}api/getlocationbywarehouseid/2",
+					"host": [
+						"{{BASE_URL}}api"
+					],
+					"path": [
+						"getlocationbywarehouseid",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getBinByLocationId",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "pYcmdDih814tDYkCXwiZII3YTNkCUaU9D1C1YaDF",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "scadmin",
+							"type": "text"
+						},
+						{
+							"key": "password_hash",
+							"value": "password123",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BASE_URL}}api/getbinbylocationid/2",
+					"host": [
+						"{{BASE_URL}}api"
+					],
+					"path": [
+						"getbinbylocationid",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getSkusById",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "pYcmdDih814tDYkCXwiZII3YTNkCUaU9D1C1YaDF",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "scadmin",
+							"type": "text"
+						},
+						{
+							"key": "password_hash",
+							"value": "password123",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BASE_URL}}api/getskusbyid/2",
+					"host": [
+						"{{BASE_URL}}api"
+					],
+					"path": [
+						"getskusbyid",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getDashboardData",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "pYcmdDih814tDYkCXwiZII3YTNkCUaU9D1C1YaDF",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "{{BASE_URL}}api/getdashboarddata/2",
+					"host": [
+						"{{BASE_URL}}api"
+					],
+					"path": [
+						"getdashboarddata",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getAllSkus",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "vIUw2ws8NnKzRUDe8bmYly2Hpasb1j3utTsq7j1v",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "scadmin",
+							"type": "text"
+						},
+						{
+							"key": "password_hash",
+							"value": "password123",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BASE_URL}}api/getallskus",
+					"host": [
+						"{{BASE_URL}}api"
+					],
+					"path": [
+						"getallskus"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Count",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "pYcmdDih814tDYkCXwiZII3YTNkCUaU9D1C1YaDF",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "counting_exercise_id",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "team_id",
+							"value": "2",
+							"type": "text"
+						},
+						{
+							"key": "user_id",
+							"value": "8",
+							"type": "text"
+						},
+						{
+							"key": "bin_id",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "sku_id",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "pallet_count",
+							"value": "85",
+							"type": "text"
+						},
+						{
+							"key": "extras",
+							"value": "74",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BASE_URL}}api/count",
+					"host": [
+						"{{BASE_URL}}api"
+					],
+					"path": [
+						"count"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "Wy9n7SnQCk27Huz0irpQTgEPm98G25BlYGzL8sE7",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "x-api-key",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "",
+			"type": "default"
+		}
+	]
+}
