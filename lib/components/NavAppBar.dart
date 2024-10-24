@@ -19,7 +19,7 @@ class NavAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       leading: onPressed != null
           ? IconButton(
-              icon: Icon(Icons.arrow_back),
+              icon: const Icon(Icons.arrow_back),
               onPressed: onPressed,
             )
           : null,
@@ -28,5 +28,5 @@ class NavAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   // TODO: implement preferredSize
-  Size get preferredSize => Size.fromHeight(60.0);
+  Size get preferredSize => const Size.fromHeight(60.0);
 }

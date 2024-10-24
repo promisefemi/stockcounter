@@ -47,7 +47,7 @@ class Lga implements Model {
 class LgaList implements Model {
   List<Lga> data;
 
-  LgaList({List<Lga>? data}) : this.data = data ?? [];
+  LgaList({List<Lga>? data}) : data = data ?? [];
 
   factory LgaList.fromJson(dynamic json) {
     // json = json as List<dynamic>;

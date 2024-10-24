@@ -28,10 +28,10 @@ showAlert(BuildContext context, String body,
   AlertDialog alert = AlertDialog(
     // icon: Icon(Icons.info),
     content: Padding(
-        padding: EdgeInsets.only(top: 10),
+        padding: const EdgeInsets.only(top: 10),
         child: Text(
           body,
-          style: TextStyle(fontSize: 16),
+          style: const TextStyle(fontSize: 16),
         )),
     actions: [
       continueButton,

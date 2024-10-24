@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:stock_count_app/util/constant.dart' as constant;
 
-
 import '../api/api.dart';
 import '../components/Layout.dart';
 import '../models/User.dart';
@@ -17,7 +16,6 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
-
   bool loadingHistory = false;
   int currentLimit = 10;
 
@@ -50,8 +48,6 @@ class _DashboardState extends State<Dashboard> {
       setState(() {
         loadingHistory = false;
       });
-
-
     }
   }
 
@@ -70,7 +66,7 @@ class _DashboardState extends State<Dashboard> {
               bottom: 20,
             ),
             decoration: BoxDecoration(
-              color: Color.fromRGBO(0, 30, 63, 1),
+              color: const Color.fromRGBO(0, 30, 63, 1),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
@@ -125,7 +121,7 @@ class _DashboardState extends State<Dashboard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                               "0",
+                              "0",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 30,
@@ -167,7 +163,7 @@ class _DashboardState extends State<Dashboard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                            "0",
+                              "0",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 30,
@@ -203,8 +199,7 @@ class _DashboardState extends State<Dashboard> {
                   Color.fromRGBO(0, 15, 31, 1),
                 ],
                 title: "Stations",
-                onTap: () {
-                 },
+                onTap: () {},
               ),
               const SizedBox(width: 15),
               DashboardCard(
@@ -214,8 +209,7 @@ class _DashboardState extends State<Dashboard> {
                   Color.fromRGBO(0, 15, 31, 1),
                 ],
                 title: "Purchases",
-                onTap: () {
-                 },
+                onTap: () {},
               ),
             ],
           ),
@@ -238,8 +232,7 @@ class _DashboardState extends State<Dashboard> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () {
-                     },
+                    onPressed: () {},
                     child: const Text("View all"),
                   ),
                 ],
@@ -253,7 +246,7 @@ class _DashboardState extends State<Dashboard> {
                     child: CircularProgressIndicator(),
                   ),
                 )
-              else if (!loadingHistory )
+              else if (!loadingHistory)
                 const Padding(
                   padding: EdgeInsets.all(10),
                   child: Text("No transaction"),
@@ -262,7 +255,6 @@ class _DashboardState extends State<Dashboard> {
                 const SizedBox(
                   height: 10,
                 ),
-
             ],
           ),
         ]),
@@ -319,15 +311,15 @@ class DashboardCard extends StatelessWidget {
                 ),
               ),
               Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(50)),
                 child: Icon(
                   icon,
                   color: Colors.white,
                   size: 23,
                 ),
-                padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(50)),
               )
             ],
           ),

@@ -7,6 +7,7 @@ class UserIcon extends StatelessWidget {
   final Color borderColor;
 
   const UserIcon({
+    super.key,
     required this.imageUrl,
     required this.size,
     this.borderWidth = 2,

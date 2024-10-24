@@ -26,6 +26,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _dontShowPassword = true;
   bool _isLoading = false;
 
+  @override
   void initState() {
     super.initState();
     // testData();
@@ -76,8 +77,14 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      if (!response.status) {
-        showAlert(context, response.message.toUpperCase());
+      print("FRONT RESPONSE $response");
+
+      if (response.statusCode != 200) {
+        showAlert(
+            context,
+            response.message == ""
+                ? response.message.toUpperCase()
+                : "Cannot connect to server");
         return;
       }
 
@@ -177,7 +184,7 @@ class _LoginPageState extends State<LoginPage> {
                                 hintText: "Username",
                                 borderRadius: 10,
                                 borderWidth: 1,
-                                color: Color.fromRGBO(182, 182, 182, 1),
+                                color: const Color.fromRGBO(182, 182, 182, 1),
                                 onChanged: (value) {
                                   setState(() {
                                     _username = value;
@@ -192,7 +199,7 @@ class _LoginPageState extends State<LoginPage> {
                                 hintText: "Password",
                                 borderRadius: 10,
                                 borderWidth: 1,
-                                color: Color.fromRGBO(182, 182, 182, 1),
+                                color: const Color.fromRGBO(182, 182, 182, 1),
                                 onChanged: (value) {
                                   setState(() {
                                     _password = value;
