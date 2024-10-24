@@ -76,10 +76,10 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       if (!response.status) {
-        showAlert(context, response.message);
+        showAlert(context, response.message.toUpperCase());
         return;
       }
-debugPrint(response as String);
+      debugPrint(response as String);
       return;
 // response.data.
 

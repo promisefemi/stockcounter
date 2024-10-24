@@ -3,7 +3,7 @@ import "dart:convert";
 import "package:flutter/widgets.dart";
 
 import "package:stock_count_app/models/Login.dart";
- import "package:stock_count_app/util/shared_preference_helper.dart";
+import "package:stock_count_app/util/shared_preference_helper.dart";
 import "package:http/http.dart" as http;
 import 'package:stock_count_app/models/ApiResponse.dart';
 import "package:stock_count_app/util/constant.dart" as constant;
@@ -33,18 +33,15 @@ class Api {
 
   ApiResponse<Model>? _handleResponse(
       http.Response response, Model Function(dynamic) decodeInnerModel) {
-    if (response.statusCode == 200) {
-      var decodedResponse = jsonDecode(response.body);
-      debugPrint(response.body);
-      final finalResponse =
-          ApiResponse.fromJson(decodedResponse, decodeInnerModel);
-      return finalResponse;
-    } else {
-      debugPrint("Request failed with response code: ${response.statusCode}");
-      debugPrint("Failed response body ${response.body}");
-      //showAlert(context, body)
-      return null;
-    }
+    debugPrint("Request failed with response code: ${response.statusCode}");
+    debugPrint("Failed response body ${response.body}");
+
+    var decodedResponse = jsonDecode(response.body);
+
+    debugPrint(response.body);
+    var finalResponse = ApiResponse.fromJson(
+        decodedResponse, decodeInnerModel, response.statusCode);
+    return finalResponse;
   }
 
   Future<ApiResponse<Model>?> _get(
@@ -89,10 +86,15 @@ class Api {
   }
 
   Future<ApiResponse<Login>?> login(
-      String username, String password,) async {
+    String username,
+    String password,
+  ) async {
     var response = await _post(
       "apiauthenticate",
-      {'username': username, 'password_hash': password,},
+      {
+        'username': username,
+        'password_hash': password,
+      },
       Login.fromJson,
     );
     if (response == null) {
@@ -101,14 +103,12 @@ class Api {
 
     if (response.data is Login) {
       return ApiResponse<Login>(
-        status: response.status,
-        message: response.message,
-        data: response.data as Login, // Safe cast
-      );
+          status: response.status,
+          message: response.message,
+          data: response.data as Login, // Safe cast
+          statusCode: response.statusCode);
     } else {
       return null;
     }
   }
-
-
 }
