@@ -1,39 +1,69 @@
 import 'package:stock_count_app/models/Model.dart';
 
+class Team implements Model {
+  final String teamId;
+  final String userId;
+  final String countingExcerciseId;
+
+  Team({this.teamId = "", this.userId = "", this.countingExcerciseId = ""});
+
+  factory Team.fromJson(Map<String, dynamic> json) {
+    return Team(
+      teamId: json['team_id'] ?? "",
+      userId: json['user_id'] ?? "",
+      countingExcerciseId: json['counting_exercise_id'] ?? "",
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'team_id': teamId,
+      'user_id': userId,
+      'counting_exercise_id': countingExcerciseId,
+    };
+  }
+}
+
 class User implements Model {
   final String id;
   final String username;
-  final String lineManager;
   final String email;
-  final String firstName;
-  final String lastName;
-  final String roleId;
+  final String fullName;
+  final String phone;
+  final String plant;
   final String role;
-  final String companyCode;
+  final String status;
+  final Team? team;
 
   User({
     this.id = "",
     this.username = "",
-    this.lineManager = "",
     this.email = "",
-    this.firstName = "",
-    this.lastName = "",
-    this.roleId = "",
+    this.fullName = "",
+    this.phone = "",
+    this.plant = "",
     this.role = "",
-    this.companyCode = "",
+    this.status = "",
+    this.team,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] ?? "",
       username: json['username'] ?? "",
-      lineManager: json['line_manager'] ?? "",
       email: json['email'] ?? "",
-      firstName: json['first_name'] ?? "",
-      lastName: json['last_name'] ?? "",
-      roleId: json['role_id'] ?? "",
+      fullName: json['full_name'] ?? "",
+      phone: json['phone'] ?? "",
+      plant: json['plant'] ?? "",
       role: json['role'] ?? "",
-      companyCode: json['company_code'] ?? "",
+      status: json['status'] ?? "",
+      team: json.isNotEmpty
+          ? (json['teamInformation'] != null &&
+                  json['teamInformation'].isNotEmpty
+              ? Team.fromJson(json['teamInformation'])
+              : null)
+          : null,
     );
   }
 
@@ -42,13 +72,13 @@ class User implements Model {
     return {
       'id': id,
       'username': username,
-      'line_manager': lineManager,
       'email': email,
-      'first_name': firstName,
-      'last_name': lastName,
-      'role_id': roleId,
+      'fullName': fullName,
+      'phone': phone,
+      'plant': plant,
       'role': role,
-      'company_code': companyCode,
+      'status': status,
+      'team': team?.toJson(),
     };
   }
 }

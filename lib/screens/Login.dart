@@ -59,6 +59,7 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
     });
 
+    print("PRINTIN RES");
     try {
       ApiResponse<Login>? response =
           await Api.instance.login(_username, _password);
@@ -79,8 +80,7 @@ class _LoginPageState extends State<LoginPage> {
         showAlert(context, response.message.toUpperCase());
         return;
       }
-      debugPrint(response as String);
-      return;
+
 // response.data.
 
       final pref = await SharedPreferencesHelper.getInstance();
