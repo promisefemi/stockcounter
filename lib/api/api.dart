@@ -1,8 +1,11 @@
 import "dart:convert";
 
 import "package:flutter/widgets.dart";
+import "package:stock_count_app/models/Bin.dart";
+import "package:stock_count_app/models/Location.dart";
 
 import "package:stock_count_app/models/Login.dart";
+import "package:stock_count_app/models/Sku.dart";
 import "package:stock_count_app/models/Warehouse.dart";
 import "package:stock_count_app/util/shared_preference_helper.dart";
 import "package:http/http.dart" as http;
@@ -52,7 +55,6 @@ class Api {
   Future<Map<String, dynamic>?> _get(
     String uri,
     Map<String, dynamic> param,
-    Model Function(dynamic) decodeInnerModel,
   ) async {
     try {
       await _loadApiKey();
@@ -65,7 +67,10 @@ class Api {
       }
       // print(parsedUri);
       var response = await http.get(parsedUri, headers: headers);
-      return {"responseBody": response.body, "statusCode": response.statusCode};
+      return {
+        "responseBody": jsonDecode(response.body),
+        "statusCode": response.statusCode
+      };
     } catch (error) {
       print("Error from try Catch: ${error.toString()}");
       return null;
@@ -127,7 +132,7 @@ class Api {
   Future<ApiResponse<WarehouseList>?> fetchWarehouses(
     String plant,
   ) async {
-    var response = await _post("getwarehousesbyplantid/$plant", {});
+    var response = await _get("getwarehousesbyplantid/$plant", {});
 
     if (response == null) {
       return null;
@@ -141,6 +146,82 @@ class Api {
             ? response['responseBody']['message']
             : "",
         data: WarehouseList.fromJson(response['responseBody']), // Safe cast
+        statusCode: response['statusCode']);
+  }
+
+  Future<ApiResponse<LocationList>?> fetchWarehouseLocations(
+    String warehouseId,
+  ) async {
+    var response = await _get("getlocationbywarehouseid/$warehouseId", {});
+
+    if (response == null) {
+      return null;
+    }
+
+    return ApiResponse<LocationList>(
+        status: response['statusCode'] != null && response['statusCode'] == 200
+            ? true
+            : false,
+        message: response['responseBody']['message'] != null
+            ? response['responseBody']['message']
+            : "",
+        data: LocationList.fromJson(response['responseBody']), // Safe cast
+        statusCode: response['statusCode']);
+  }
+
+  Future<ApiResponse<BinList>?> fetchBins(
+    String locationId,
+  ) async {
+    var response = await _get("getbinbylocationid/$locationId", {});
+
+    if (response == null) {
+      return null;
+    }
+
+    return ApiResponse<BinList>(
+        status: response['statusCode'] != null && response['statusCode'] == 200
+            ? true
+            : false,
+        message: response['responseBody']['message'] != null
+            ? response['responseBody']['message']
+            : "",
+        data: BinList.fromJson(response['responseBody']), // Safe cast
+        statusCode: response['statusCode']);
+  }
+
+  Future<ApiResponse<SkuList>?> fetchSKUs() async {
+    var response = await _get("getallskus", {});
+
+    if (response == null) {
+      return null;
+    }
+
+    return ApiResponse<SkuList>(
+        status: response['statusCode'] != null && response['statusCode'] == 200
+            ? true
+            : false,
+        message: response['responseBody']['message'] != null
+            ? response['responseBody']['message']
+            : "",
+        data: SkuList.fromJson(response['responseBody']), // Safe cast
+        statusCode: response['statusCode']);
+  }
+
+  Future<ApiResponse<Sku>?> submitCount(Map<String, String> postData) async {
+    var response = await _post("count", postData);
+
+    if (response == null) {
+      return null;
+    }
+
+    return ApiResponse(
+        status: response['statusCode'] != null && response['statusCode'] == 200
+            ? true
+            : false,
+        message: response['responseBody']['message'] != null
+            ? response['responseBody']['message']
+            : "",
+        data: Sku(), // Safe cast
         statusCode: response['statusCode']);
   }
 }
