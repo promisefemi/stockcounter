@@ -73,7 +73,7 @@ class User implements Model {
       'id': id,
       'username': username,
       'email': email,
-      'fullName': fullName,
+      'full_name': fullName,
       'phone': phone,
       'plant': plant,
       'role': role,

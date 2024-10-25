@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count_app/screens/Dashboard.dart';
 import 'package:stock_count_app/screens/Login.dart';
+import 'package:stock_count_app/screens/Settings.dart';
+import 'package:stock_count_app/screens/Warehouse.dart';
 import 'package:stock_count_app/util/shared_preference_helper.dart';
 import 'package:stock_count_app/util/constant.dart' as constant;
 
@@ -29,13 +31,15 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromRGBO(245, 0, 10, 1)),
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color.fromRGBO(245, 0, 10, 1)),
         useMaterial3: true,
       ),
       routes: {
         LoginPage.routeName: (context) => const LoginPage(),
-        Dashboard.routeName: (context) => const Dashboard()
-
+        Dashboard.routeName: (context) => const Dashboard(),
+        WarehousePage.routeName: (context) => const WarehousePage(),
+        Settings.routeName: (context) => Settings(),
         // QrcodeScanner.routeName: (context) => const QrcodeScanner(),
       },
       initialRoute:

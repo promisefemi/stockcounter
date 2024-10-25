@@ -137,12 +137,12 @@ class Api {
     if (response == null) {
       return null;
     }
-
+    print(response);
     return ApiResponse<WarehouseList>(
         status: response['statusCode'] != null && response['statusCode'] == 200
             ? true
             : false,
-        message: response['responseBody']['message'] != null
+        message: response['responseBody'].contains('message')
             ? response['responseBody']['message']
             : "",
         data: WarehouseList.fromJson(response['responseBody']), // Safe cast
@@ -162,7 +162,7 @@ class Api {
         status: response['statusCode'] != null && response['statusCode'] == 200
             ? true
             : false,
-        message: response['responseBody']['message'] != null
+        message: response['responseBody'].contains('message')
             ? response['responseBody']['message']
             : "",
         data: LocationList.fromJson(response['responseBody']), // Safe cast
@@ -182,7 +182,7 @@ class Api {
         status: response['statusCode'] != null && response['statusCode'] == 200
             ? true
             : false,
-        message: response['responseBody']['message'] != null
+        message: response['responseBody'].contains('message')
             ? response['responseBody']['message']
             : "",
         data: BinList.fromJson(response['responseBody']), // Safe cast
@@ -195,12 +195,13 @@ class Api {
     if (response == null) {
       return null;
     }
+    print(response);
 
     return ApiResponse<SkuList>(
-        status: response['statusCode'] != null && response['statusCode'] == 200
+        status: response['statusCode'] != null && response['statusCode'] == 201
             ? true
             : false,
-        message: response['responseBody']['message'] != null
+        message: response['responseBody'].contains('message')
             ? response['responseBody']['message']
             : "",
         data: SkuList.fromJson(response['responseBody']), // Safe cast
@@ -223,5 +224,22 @@ class Api {
             : "",
         data: Sku(), // Safe cast
         statusCode: response['statusCode']);
+  }
+
+  Future<Map?> getDashboard(String id) async {
+    var response = await _get("getdashboarddata/$id", {});
+
+    if (response == null) {
+      return null;
+    }
+
+    return {
+      "status": response['statusCode'] != null && response['statusCode'] == 200
+          ? true
+          : false,
+
+      "data": response['responseBody'], // Safe cast
+      "statusCode": response['statusCode']
+    };
   }
 }
