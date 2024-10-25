@@ -18,6 +18,7 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   bool loadingHistory = false;
   int currentLimit = 10;
+  User user = User();
 
   @override
   void initState() {
@@ -41,10 +42,11 @@ class _DashboardState extends State<Dashboard> {
     var userMap = prefs.getMap(constant.userKey);
     if (userMap != null) {
       setState(() {
-        var driver = User.fromJson(userMap);
+        user = User.fromJson(userMap);
         loadingHistory = true;
       });
 
+      print(user.toJson());
       setState(() {
         loadingHistory = false;
       });
@@ -53,211 +55,161 @@ class _DashboardState extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return Layout(
-      child: SingleChildScrollView(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // const SizedBox(height: 20),
+    return Scaffold(
+      body: Column(
+        children: [
           Container(
-            width: double.infinity,
-            padding: const EdgeInsets.only(
-              left: 20,
-              right: 20,
-              top: 25,
-              bottom: 20,
-            ),
-            decoration: BoxDecoration(
-              color: const Color.fromRGBO(0, 30, 63, 1),
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 8,
-                  spreadRadius: 2,
-                  offset: Offset.fromDirection(12),
-                )
-              ],
-            ),
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(),
             child: Column(
               children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      "Welcome",
+                    Column(children: [
+                      Text(
+                        user.fullName,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
+                      ),
+                      Text(
+                        user.username,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )
+                    ])
+                  ],
+                ),
+                const SizedBox(height: 15),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.white,
+                        ),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              "20",
+                              style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 25),
+                            ),
+                            Text(
+                              "Total SKU Count",
+                              style: TextStyle(
+                                  color: Colors.black45,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 15),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: constant.primaryColor,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.white,
+                              ),
+                              child: const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add,
+                                    color: Colors.white,
+                                    size: 25,
+                                  )
+                                ],
+                              ),
+                            ),
+                            const Text(
+                              "New Count",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 15),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+// SECOND SECTION
+          Container(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      " History",
+                      textAlign: TextAlign.start,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white,
+                        color: Colors.black45,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 3.0),
-                      child: Text(
-                        "",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-                const SizedBox(height: 50),
-                // FUEL PRICES
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 15, vertical: 17),
-                        decoration: BoxDecoration(
-                          color: Colors.white24,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "0",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 30,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              "Petrol Price",
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 15, vertical: 17),
-                        decoration: BoxDecoration(
-                          color: Colors.white24,
-                          borderRadius: BorderRadius.circular(15),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 8,
-                              spreadRadius: 2,
-                              offset: Offset.fromDirection(12),
-                            )
-                          ],
-                        ),
-                        child: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "0",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 30,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              "Diesel Price",
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text("View all"),
                     ),
                   ],
                 ),
+                if (loadingHistory)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 40,
+                    ),
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else if (!loadingHistory)
+                  const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Text("No History to show"),
+                  )
+                else
+                  const SizedBox(
+                    height: 10,
+                  ),
               ],
             ),
           ),
-          const SizedBox(height: 15),
-          Row(
-            children: [
-              DashboardCard(
-                icon: Icons.gas_meter,
-                colors: const [
-                  Color.fromRGBO(0, 21, 44, 1),
-                  Color.fromRGBO(0, 15, 31, 1),
-                ],
-                title: "Stations",
-                onTap: () {},
-              ),
-              const SizedBox(width: 15),
-              DashboardCard(
-                icon: Icons.check_box,
-                colors: const [
-                  Color.fromRGBO(0, 21, 44, 1),
-                  Color.fromRGBO(0, 15, 31, 1),
-                ],
-                title: "Purchases",
-                onTap: () {},
-              ),
-            ],
-          ),
-
-          // TRANSACTION LIST
-          const SizedBox(height: 15),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Transaction History",
-                    textAlign: TextAlign.start,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black45,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text("View all"),
-                  ),
-                ],
-              ),
-              if (loadingHistory)
-                const Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: 40,
-                  ),
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                )
-              else if (!loadingHistory)
-                const Padding(
-                  padding: EdgeInsets.all(10),
-                  child: Text("No transaction"),
-                )
-              else
-                const SizedBox(
-                  height: 10,
-                ),
-            ],
-          ),
-        ]),
+        ],
       ),
     );
   }

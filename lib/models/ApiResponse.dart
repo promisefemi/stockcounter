@@ -22,6 +22,9 @@ class ApiResponse<T extends Model> {
     } else {
       data = innerModelAbstract({});
     }
+
+    print(json);
+
     return ApiResponse(
         status: json['status'] ?? false,
         message: json['message'] ?? "",
@@ -34,6 +37,7 @@ class ApiResponse<T extends Model> {
       'status': status,
       'message': message,
       'data': data.toJson(),
+      'statusCode': statusCode
     };
   }
 }

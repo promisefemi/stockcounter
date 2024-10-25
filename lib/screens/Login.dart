@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import 'package:stock_count_app/util/constant.dart' as constant;
@@ -68,6 +70,7 @@ class _LoginPageState extends State<LoginPage> {
       setState(() {
         _isLoading = false;
       });
+
       if (response == null) {
         showAlert(
           context,
@@ -77,12 +80,10 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      print("FRONT RESPONSE $response");
-
       if (response.statusCode != 200) {
         showAlert(
             context,
-            response.message == ""
+            response.message != ""
                 ? response.message.toUpperCase()
                 : "Cannot connect to server");
         return;

@@ -3,6 +3,7 @@ import "dart:convert";
 import "package:flutter/widgets.dart";
 
 import "package:stock_count_app/models/Login.dart";
+import "package:stock_count_app/models/Warehouse.dart";
 import "package:stock_count_app/util/shared_preference_helper.dart";
 import "package:http/http.dart" as http;
 import 'package:stock_count_app/models/ApiResponse.dart';
@@ -38,13 +39,17 @@ class Api {
 
     var decodedResponse = jsonDecode(response.body);
 
-    debugPrint(response.body);
+    print(jsonEncode(decodedResponse));
+
     var finalResponse = ApiResponse.fromJson(
         decodedResponse, decodeInnerModel, response.statusCode);
+
+    print(jsonEncode(finalResponse));
+
     return finalResponse;
   }
 
-  Future<ApiResponse<Model>?> _get(
+  Future<Map<String, dynamic>?> _get(
     String uri,
     Map<String, dynamic> param,
     Model Function(dynamic) decodeInnerModel,
@@ -60,17 +65,16 @@ class Api {
       }
       // print(parsedUri);
       var response = await http.get(parsedUri, headers: headers);
-      return _handleResponse(response, decodeInnerModel);
+      return {"responseBody": response.body, "statusCode": response.statusCode};
     } catch (error) {
       print("Error from try Catch: ${error.toString()}");
       return null;
     }
   }
 
-  Future<ApiResponse<Model>?> _post(
+  Future<Map<String, dynamic>?> _post(
     String uri,
     Map<String, dynamic> data,
-    Model Function(dynamic) decodeInnerModel,
   ) async {
     try {
       await _loadApiKey();
@@ -78,7 +82,10 @@ class Api {
       Map<String, String> headers = {'x-api-key': _apiKey};
       //  print(parsedUri);
       var response = await http.post(parsedUri, body: data, headers: headers);
-      return _handleResponse(response, decodeInnerModel);
+      return {
+        "responseBody": jsonDecode(response.body),
+        "statusCode": response.statusCode
+      };
     } catch (error) {
       print("Error from try Catch: ${error.toString()}");
       return null;
@@ -95,20 +102,45 @@ class Api {
         'username': username,
         'password_hash': password,
       },
-      Login.fromJson,
     );
+
     if (response == null) {
       return null;
     }
 
-    if (response.data is Login) {
-      return ApiResponse<Login>(
-          status: response.status,
-          message: response.message,
-          data: response.data as Login, // Safe cast
-          statusCode: response.statusCode);
-    } else {
+    if (response['responseBody']['user'] != null) {
+      response['responseBody']['user']['teamInformation'] =
+          response['responseBody']['teamInformation'];
+    }
+
+    return ApiResponse<Login>(
+        status: response['statusCode'] != null && response['statusCode'] == 200
+            ? true
+            : false,
+        message: response['responseBody']['message'] != null
+            ? response['responseBody']['message']
+            : "",
+        data: Login.fromJson(response['responseBody']), // Safe cast
+        statusCode: response['statusCode']);
+  }
+
+  Future<ApiResponse<WarehouseList>?> fetchWarehouses(
+    String plant,
+  ) async {
+    var response = await _post("getwarehousesbyplantid/$plant", {});
+
+    if (response == null) {
       return null;
     }
+
+    return ApiResponse<WarehouseList>(
+        status: response['statusCode'] != null && response['statusCode'] == 200
+            ? true
+            : false,
+        message: response['responseBody']['message'] != null
+            ? response['responseBody']['message']
+            : "",
+        data: WarehouseList.fromJson(response['responseBody']), // Safe cast
+        statusCode: response['statusCode']);
   }
 }

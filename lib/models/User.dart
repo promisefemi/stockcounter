@@ -78,7 +78,7 @@ class User implements Model {
       'plant': plant,
       'role': role,
       'status': status,
-      'team': team?.toJson(),
+      'teamInformation': team?.toJson(),
     };
   }
 }
