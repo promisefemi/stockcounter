@@ -64,8 +64,10 @@ class Api {
       if (param.isNotEmpty) {
         parsedUri = parsedUri.replace(queryParameters: param);
       }
-      // print(parsedUri);
+      print(parsedUri);
       var response = await http.get(parsedUri, headers: headers);
+      print(response.statusCode);
+      print(response.body);
       return {
         "responseBody": jsonDecode(response.body),
         "statusCode": response.statusCode

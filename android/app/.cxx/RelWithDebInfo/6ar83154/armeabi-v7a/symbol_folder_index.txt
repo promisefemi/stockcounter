@@ -1,0 +1,1 @@
+/Users/macintosh/Documents/promise/ciphernet/stock_count_app/build/app/intermediates/cxx/RelWithDebInfo/6ar83154/obj/armeabi-v7a

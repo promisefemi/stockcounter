@@ -1,0 +1,1 @@
+/Users/macintosh/Documents/promise/ciphernet/stock_count_app/build/app/intermediates/cxx/Debug/6p3pvs66/obj/arm64-v8a

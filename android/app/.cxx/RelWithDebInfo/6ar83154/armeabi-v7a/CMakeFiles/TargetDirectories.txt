@@ -1,0 +1,2 @@
+/Users/macintosh/Documents/promise/ciphernet/stock_count_app/android/app/.cxx/RelWithDebInfo/6ar83154/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/macintosh/Documents/promise/ciphernet/stock_count_app/android/app/.cxx/RelWithDebInfo/6ar83154/armeabi-v7a/CMakeFiles/rebuild_cache.dir

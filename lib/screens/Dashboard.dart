@@ -69,6 +69,10 @@ class _DashboardState extends State<Dashboard> {
         return;
       }
 
+      if (response['status'] == false) {
+        // showAlert(context, response['message']);
+        return;
+      }
       if (response['data']["countSummary"] != null) {
         var countSummary = response['data']['countSummary'] as List;
 

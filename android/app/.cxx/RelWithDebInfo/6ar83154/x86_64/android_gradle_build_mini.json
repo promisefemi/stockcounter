@@ -1,0 +1,20 @@
+{
+  "buildFiles": [
+    "/Users/macintosh/development/flutter/packages/flutter_tools/gradle/src/main/groovy/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/macintosh/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/Users/macintosh/Documents/promise/ciphernet/stock_count_app/android/app/.cxx/RelWithDebInfo/6ar83154/x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/macintosh/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/Users/macintosh/Documents/promise/ciphernet/stock_count_app/android/app/.cxx/RelWithDebInfo/6ar83154/x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {}
+}
