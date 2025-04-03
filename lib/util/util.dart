@@ -11,11 +11,15 @@ import 'package:stock_count_app/util/constant.dart' as constant;
 import 'package:intl/intl.dart';
 
 showAlert(BuildContext context, String body,
-    {String? title = "", Function? callback}) {
+    {String? title = "",
+    String? continueText,
+    Function? callback,
+    bool showCancel = false,
+    Function? cancelCallback}) {
   // set up the buttons
 
   Widget continueButton = TextButton(
-    child: const Text("Ok"),
+    child: Text(continueText ?? "Ok"),
     onPressed: () {
       Navigator.of(context).pop();
       if (callback != null) {
@@ -35,6 +39,16 @@ showAlert(BuildContext context, String body,
         )),
     actions: [
       continueButton,
+      if (showCancel)
+        TextButton(
+          child: const Text("Cancel"),
+          onPressed: () {
+            Navigator.of(context).pop();
+            if (cancelCallback != null) {
+              cancelCallback();
+            }
+          },
+        ),
     ],
   );
 

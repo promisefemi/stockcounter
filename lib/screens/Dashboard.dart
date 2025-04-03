@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
+import 'package:stock_count_app/screens/Discrepancies.dart';
 import 'package:stock_count_app/screens/Settings.dart';
 
 import 'package:stock_count_app/util/constant.dart' as constant;
@@ -29,6 +32,8 @@ class _DashboardState extends State<Dashboard> {
   @override
   void initState() {
     super.initState();
+
+    checkForDiscrepancies();
 
     _handleInitData();
   }
@@ -90,6 +95,23 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 
+  checkForDiscrepancies() async {
+    var response = await Api.instance.getDiscrepancies();
+    if (response == null) {
+      return;
+    }
+
+    print(response['data']['discrepancies']);
+    if (response['data']['discrepancies'] != null &&
+        response['data']['discrepancies'].length > 0) {
+      Fluttertoast.showToast(
+        msg:
+            "There are ${response['data']['discrepancies'].length} discrepancies in the records",
+        toastLength: Toast.LENGTH_LONG,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,27 +134,29 @@ class _DashboardState extends State<Dashboard> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  user.fullName,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.black,
-                                  ),
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                user.fullName,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black,
                                 ),
-                                Text(
-                                  user.username,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                )
-                              ]),
+                              ),
+                              Text(
+                                user.username,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              )
+                            ],
+                          ),
                           const SizedBox(width: 5),
-                          CircleAvatar(
+                          const CircleAvatar(
                             radius: 25.0,
                             child: Icon(Icons.person, size: 40),
                           )
@@ -144,6 +168,7 @@ class _DashboardState extends State<Dashboard> {
                       children: [
                         Expanded(
                           child: Container(
+                            height: 140,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 30),
                             decoration: BoxDecoration(
@@ -155,11 +180,11 @@ class _DashboardState extends State<Dashboard> {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Text(
-                                  totalSKUcount.toString(),
+                                  NumberFormat("#,##0").format(totalSKUcount),
                                   style: const TextStyle(
                                       color: Colors.black,
                                       fontWeight: FontWeight.w900,
-                                      fontSize: 35),
+                                      fontSize: 25),
                                 ),
                                 const Text(
                                   "Total SKU Count",
@@ -174,52 +199,82 @@ class _DashboardState extends State<Dashboard> {
                         ),
                         const SizedBox(width: 15),
                         Expanded(
+                          child: Container(
+                            child: GestureDetector(
+                              onTap: () {
+                                print("clicking");
+                                Navigator.of(context)
+                                    .pushNamed(WarehousePage.routeName);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 30),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: constant.primaryColor,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: Color.fromRGBO(237, 80, 86, 1),
+                                      ),
+                                      child: const Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.add,
+                                            color: Colors.white,
+                                            size: 35,
+                                            weight: 10,
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                    const Text(
+                                      "New Count",
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 16),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      children: [
+                        Expanded(
                           child: GestureDetector(
                             onTap: () {
-                              print("clicking");
                               Navigator.of(context)
-                                  .pushNamed(WarehousePage.routeName);
+                                  .pushNamed(DiscrepancyPage.routeName);
                             },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 30),
+                              padding: const EdgeInsets.all(15),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(10),
-                                color: constant.primaryColor,
+                                color: const Color.fromARGB(255, 249, 49, 56),
                               ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Color.fromRGBO(237, 80, 86, 1),
-                                    ),
-                                    child: const Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.add,
-                                          color: Colors.white,
-                                          size: 35,
-                                          weight: 10,
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                  const Text(
-                                    "New Count",
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 16),
-                                  ),
-                                ],
+                              child: const Text(
+                                "See discrepancy list",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 16),
                               ),
                             ),
                           ),
@@ -246,7 +301,7 @@ class _DashboardState extends State<Dashboard> {
                       const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text(
                             " History",
                             textAlign: TextAlign.start,
                             style: TextStyle(
@@ -255,10 +310,6 @@ class _DashboardState extends State<Dashboard> {
                               color: Colors.black,
                             ),
                           ),
-                          // TextButton(
-                          //   onPressed: () {},
-                          //   child: const Text("View all"),
-                          // ),
                         ],
                       ),
                       if (loadingHistory)
@@ -280,45 +331,50 @@ class _DashboardState extends State<Dashboard> {
                           height: 10,
                         ),
                         Expanded(
-                          child: ListView.builder(
-                            itemBuilder: (context, index) {
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 10),
-                                decoration: BoxDecoration(
-                                    color:
-                                        const Color.fromARGB(31, 156, 156, 156),
-                                    borderRadius: BorderRadius.circular(5)),
-                                child: ListTile(
-                                  title: Text(
-                                    history[index]['sku_name'],
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.w700),
-                                  ),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                          "Team: ${history[index]['team_name']}"),
-                                      Text(
-                                          "Bin: ${history[index]['bin_name']}"),
-                                      Text(
-                                          "Warehouse: ${history[index]['warehouse_name']}"),
-                                    ],
-                                  ),
-                                  trailing: Text(
-                                    history[index]['total_sku_cases'],
-                                    style: const TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.bold,
+                          child: RefreshIndicator(
+                            onRefresh: () async {
+                              _handleInitData();
+                            },
+                            child: ListView.builder(
+                              itemBuilder: (context, index) {
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 10),
+                                  decoration: BoxDecoration(
+                                      color: const Color.fromARGB(
+                                          31, 156, 156, 156),
+                                      borderRadius: BorderRadius.circular(5)),
+                                  child: ListTile(
+                                    title: Text(
+                                      history[index]['sku_name'],
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w700),
+                                    ),
+                                    subtitle: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                            "Team: ${history[index]['team_name']}"),
+                                        Text(
+                                            "Bin: ${history[index]['bin_name']}"),
+                                        Text(
+                                            "Warehouse: ${history[index]['warehouse_name']}"),
+                                      ],
+                                    ),
+                                    trailing: Text(
+                                      history[index]['total_sku_cases'],
+                                      style: const TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              );
-                            },
-                            itemCount: history.length,
+                                );
+                              },
+                              itemCount: history.length,
+                            ),
                           ),
-                        )
+                        ),
                       ]
                     ],
                   ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count_app/screens/Dashboard.dart';
+import 'package:stock_count_app/screens/Discrepancies.dart';
 import 'package:stock_count_app/screens/Login.dart';
 import 'package:stock_count_app/screens/Settings.dart';
 import 'package:stock_count_app/screens/Warehouse.dart';
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
         Dashboard.routeName: (context) => const Dashboard(),
         WarehousePage.routeName: (context) => const WarehousePage(),
         Settings.routeName: (context) => Settings(),
+        DiscrepancyPage.routeName: (context) => const DiscrepancyPage(),
         // QrcodeScanner.routeName: (context) => const QrcodeScanner(),
       },
       initialRoute:

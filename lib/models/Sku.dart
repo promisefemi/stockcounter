@@ -4,6 +4,7 @@ class Sku implements Model {
   final String id;
   final String name;
   final String skuCode;
+  final String skuType;
   final String description;
   final String casePerPallet;
 
@@ -11,6 +12,7 @@ class Sku implements Model {
     this.id = "",
     this.name = "",
     this.skuCode = "",
+    this.skuType = "",
     this.description = "",
     this.casePerPallet = "",
   });
@@ -20,6 +22,7 @@ class Sku implements Model {
       id: json['id'] ?? "",
       name: json['name'] ?? "",
       skuCode: json['sku_code'] ?? "",
+      skuType: json['sku_type'] ?? "",
       description: json['description'] ?? "",
       casePerPallet: json['cases_per_pallet'] ?? "",
     );
@@ -31,6 +34,7 @@ class Sku implements Model {
       'id': id,
       'name': name,
       'sku_code': skuCode,
+      'sku_type': skuType,
       'description': description,
       'cases_per_pallet': casePerPallet,
     };

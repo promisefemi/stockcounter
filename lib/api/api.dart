@@ -15,10 +15,9 @@ import "package:stock_count_app/models/Model.dart";
 
 // ignore: constant_identifier_names
 
-// const BaseUrl = "http://192.168.0.134/fuelapp/api/v1/";
-// const BaseUrl = "http://192.168.0.103/fuelapp/api/v1/";
+// const BaseUrl = "http://192.168.1.215:8080/";
 // const BaseUrl = "https://fuelapp.ciphernetsandbox.com.ng/api/v1/";
-const BaseUrl = "https://stockcount.ciphernetsandbox.com.ng/public/";
+const BaseUrl = "https://stockcount.ciphernet.net/";
 
 class Api {
   String _apiKey = '';
@@ -215,19 +214,37 @@ class Api {
       return null;
     }
 
+    print("SUBMIT COUNT RESPONSE");
+    print(response);
+
     return ApiResponse(
         status: response['statusCode'] != null && response['statusCode'] == 200
             ? true
             : false,
-        message: response['responseBody']['message'] != null
-            ? response['responseBody']['message']
-            : "",
+        message: response['responseBody']['message'] ?? "",
         data: Sku(), // Safe cast
         statusCode: response['statusCode']);
   }
 
   Future<Map?> getDashboard(String id) async {
     var response = await _get("getdashboarddata/$id", {});
+
+    if (response == null) {
+      return null;
+    }
+
+    return {
+      "status": response['statusCode'] != null && response['statusCode'] == 200
+          ? true
+          : false,
+
+      "data": response['responseBody'], // Safe cast
+      "statusCode": response['statusCode']
+    };
+  }
+
+  Future<Map?> getDiscrepancies() async {
+    var response = await _get("discrepancies-list", {});
 
     if (response == null) {
       return null;
