@@ -3,63 +3,14 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import "package:flutter/material.dart";
+import 'package:stock_count_app/components/FullPageLoader.dart';
 import 'package:stock_count_app/models/ApiResponse.dart';
 import 'package:stock_count_app/models/User.dart';
 import 'package:stock_count_app/screens/Dashboard.dart';
+import 'package:stock_count_app/util/dialog.dart';
 import 'package:stock_count_app/util/shared_preference_helper.dart';
 import 'package:stock_count_app/util/constant.dart' as constant;
 import 'package:intl/intl.dart';
-
-showAlert(BuildContext context, String body,
-    {String? title = "",
-    String? continueText,
-    Function? callback,
-    bool showCancel = false,
-    Function? cancelCallback}) {
-  // set up the buttons
-
-  Widget continueButton = TextButton(
-    child: Text(continueText ?? "Ok"),
-    onPressed: () {
-      Navigator.of(context).pop();
-      if (callback != null) {
-        callback();
-      }
-    },
-  );
-
-  // set up the AlertDialog
-  AlertDialog alert = AlertDialog(
-    // icon: Icon(Icons.info),
-    content: Padding(
-        padding: const EdgeInsets.only(top: 10),
-        child: Text(
-          body,
-          style: const TextStyle(fontSize: 16),
-        )),
-    actions: [
-      continueButton,
-      if (showCancel)
-        TextButton(
-          child: const Text("Cancel"),
-          onPressed: () {
-            Navigator.of(context).pop();
-            if (cancelCallback != null) {
-              cancelCallback();
-            }
-          },
-        ),
-    ],
-  );
-
-  // show the dialog
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return alert;
-    },
-  );
-}
 
 String formatDate(String dateString,
     {String? outputFormat,
@@ -127,14 +78,15 @@ Future<User?> getActiveUser() async {
 bool handleResponse(BuildContext context, dynamic response) {
   print(response);
   if (response == null) {
-    showAlert(context, constant.somethingError, callback: () {
+    showAlert(context, AlertState.error, constant.somethingError,
+        okCallback: () {
       Navigator.pushNamed(context, Dashboard.routeName);
     });
     return false;
   }
 
   if (!response!.status) {
-    showAlert(context, response.message);
+    showAlert(context, AlertState.error, response.message);
     return false;
   }
 

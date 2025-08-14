@@ -1,7 +1,9 @@
+import 'dart:ui' as BorderType;
+
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:stock_count_app/components/Button.dart';
-import 'package:stock_count_app/components/CustomTextField..dart';
+import 'package:stock_count_app/components/CustomTextField.dart';
 import 'package:stock_count_app/components/FullPageLoader.dart';
 import 'package:stock_count_app/components/Layout.dart';
 import 'package:stock_count_app/components/QrcodeScanner.dart';
@@ -14,15 +16,66 @@ import 'package:stock_count_app/models/Warehouse.dart';
 import 'package:stock_count_app/screens/Discrepancies.dart';
 
 import 'package:stock_count_app/util/constant.dart' as constant;
+import 'package:stock_count_app/util/dialog.dart';
 import 'package:stock_count_app/util/util.dart';
+import 'package:dotted_border/dotted_border.dart';
 
 import '../api/api.dart';
 import '../models/User.dart';
 import '../util/shared_preference_helper.dart';
 
+class FormData {
+  String countingExerciseId = "";
+  String teamId = "";
+  String userId = "";
+  String binId = "";
+  String skuId = "";
+  String skuName = "";
+  String palletCount = "";
+  String extras = "";
+  String skuType = "FG";
+
+  Map<String, String> toMap() {
+    return {
+      'counting_exercise_id': countingExerciseId,
+      'team_id': teamId,
+      'user_id': userId,
+      'bin_id': binId,
+      'sku_id': skuId,
+      'pallet_count': palletCount,
+      'extras': extras,
+      'sku_type': skuType,
+    };
+  }
+
+  FormData copy() {
+    return FormData()
+      ..countingExerciseId = countingExerciseId
+      ..teamId = teamId
+      ..userId = userId
+      ..binId = binId
+      ..skuId = skuId
+      ..skuName = skuName
+      ..palletCount = palletCount
+      ..extras = extras
+      ..skuType = skuType;
+  }
+}
+
 class WarehousePage extends StatefulWidget {
-  const WarehousePage({super.key});
+  const WarehousePage({
+    super.key,
+    required this.countingExerciseId,
+    required this.teamId,
+    this.bin_id,
+    this.sku_id,
+  });
   static const routeName = "/WarehousePage";
+
+  final String countingExerciseId;
+  final String teamId;
+  final String? bin_id;
+  final String? sku_id;
 
   @override
   State<WarehousePage> createState() => _WarehousePageState();
@@ -32,21 +85,13 @@ class _WarehousePageState extends State<WarehousePage> {
   bool loadingHistory = false;
   String currentSectionTitle = "";
   int currentSection = 1;
+  bool goback = true;
   User user = User();
   SkuList skus = SkuList();
-  Map<String, String> formData = {
-    'counting_exercise_id': '',
-    'team_id': '',
-    'user_id': '',
-    'bin_id': '',
-    'sku_id': '',
-    'pallet_count': '',
-    'two_way_pallets_count': '',
-    'four_way_pallets_count': '',
-    'euro_pallets_count': '',
-    'extras': '',
-    'sku_type': ''
-  };
+  bool isCreate = true;
+  FormData formData = FormData();
+
+  List<FormData> savedFormData = [];
 
   Map<String, dynamic> warehouse = {
     'loading': false,
@@ -65,15 +110,41 @@ class _WarehousePageState extends State<WarehousePage> {
   };
   final PageController _pageViewController = PageController(initialPage: 0);
   final _palletCountController = TextEditingController();
-  final _twoWayCountController = TextEditingController();
-  final _fourWayCountController = TextEditingController();
-  final _euroCountController = TextEditingController();
   final _extrasController = TextEditingController();
 
+  String casePerPalletCount = "";
   @override
   void initState() {
     super.initState();
+    _palletCountController.addListener(() {
+      final skuId = formData.skuId;
+      if (skuId == null || skuId.isEmpty) return;
+
+      final selectedSKU = skus.data.firstWhere(
+        (e) => e.id == skuId,
+      );
+
+      final palletCount = int.tryParse(_palletCountController.text);
+      final casePerPallet = int.tryParse(selectedSKU.casePerPallet);
+
+      if (palletCount == null || casePerPallet == null) return;
+
+      // _extrasController.text = (casePerPallet * palletCount).toString();
+
+      setState(() {
+        casePerPalletCount = (casePerPallet * palletCount).toString();
+      });
+    });
+
     _handleInitData();
+  }
+
+  Sku? selectedSKU() {
+    final skuId = formData.skuId;
+    if (skuId == null || skuId.isEmpty) return null;
+    return skus.data.firstWhere(
+      (e) => e.id == skuId,
+    );
   }
 
   _handleInitData() async {
@@ -83,20 +154,38 @@ class _WarehousePageState extends State<WarehousePage> {
     if (userMap != null) {
       setState(() {
         user = User.fromJson(userMap);
-        formData['team_id'] = user.team!.teamId;
-        formData['user_id'] = user.id;
-        formData['counting_exercise_id'] = user.team!.countingExcerciseId;
-        currentSectionTitle = "Select a warehouse";
+        formData.teamId = widget.teamId;
+        formData.userId = user.id;
+        formData.countingExerciseId = widget.countingExerciseId;
+
+        currentSectionTitle = "Select a Counting Area";
       });
 
       _fetchWarehousePages();
-      _fetchSkus();
+      await _fetchSkus();
+      if (widget.sku_id != null && widget.bin_id != null) {
+        setState(() {
+          formData.skuId = widget.sku_id!;
+          formData.binId = widget.bin_id!;
+
+          formData.skuType = selectedSKU()?.skuType ?? "";
+          currentSection = 3;
+          currentSectionTitle = "Please complete the form below";
+          goback = false;
+          isCreate = false;
+        });
+        print("FORM ${formData}");
+        _pageViewController.animateToPage(
+          5,
+          duration: Durations.short1,
+          curve: Curves.easeIn,
+        );
+      }
     }
   }
 
   _fetchSkus() async {
     ApiResponse<SkuList>? response = await Api.instance.fetchSKUs();
-    print("SKU $response");
     if (response != null && response.statusCode == 200) {
       setState(() {
         skus = response.data;
@@ -109,7 +198,7 @@ class _WarehousePageState extends State<WarehousePage> {
       warehouse['loading'] = true;
     });
     ApiResponse<WarehouseList>? response =
-        await Api.instance.fetchWarehouses(user.plant);
+        await Api.instance.fetchWarehouses(widget.countingExerciseId, user.id);
     if (response != null && response.statusCode == 200) {
       setState(() {
         warehouse['data'] = response.data;
@@ -141,7 +230,7 @@ class _WarehousePageState extends State<WarehousePage> {
       bins['loading'] = true;
     });
     ApiResponse<BinList>? response =
-        await Api.instance.fetchBins(location['selected'].id);
+        await Api.instance.fetchBins(warehouse['selected'].id);
     if (response != null && response.statusCode == 200) {
       setState(() {
         bins['data'] = response.data;
@@ -156,7 +245,7 @@ class _WarehousePageState extends State<WarehousePage> {
     }
 
     if (currentSection == 2) {
-      currentSectionTitle = "Kindly select warehouse";
+      currentSectionTitle = "Kindly select Counting Area";
     } else if (currentSection == 3) {
       currentSectionTitle = "Kindly select location";
     } else if (currentSection == 4) {
@@ -171,49 +260,49 @@ class _WarehousePageState extends State<WarehousePage> {
   }
 
   _nextSection() {
-    if (currentSection == 5) {
+    if (currentSection == 3) {
       return;
     }
 
     if (currentSection == 1) {
       if (warehouse['selected'].id == '') {
-        showAlert(context, "Please select Warehouse");
+        showAlert(context, AlertState.info, "Please select Warehouse");
         return;
       }
 
-      setState(() {
-        currentSectionTitle = "Kindly select location";
-      });
-      _fetchLocations();
-    }
-    if (currentSection == 2) {
-      if (location['selected'].id == '') {
-        showAlert(context, "Please select location");
-        return;
-      }
       setState(() {
         currentSectionTitle = "Kindly select bin";
       });
       _fetchBins();
     }
-    if (currentSection == 3) {
+    // if (currentSection == 2) {
+    //   if (location['selected'].id == '') {
+    //     showAlert(context, AlertState.info, "Please select location");
+    //     return;
+    //   }
+    //   setState(() {
+    //     currentSectionTitle = "Kindly select bin";
+    //   });
+    //   _fetchBins();
+    // }
+    if (currentSection == 2) {
       if (bins['selected'].id == '') {
-        showAlert(context, "Please select bin");
-        return;
-      }
-      setState(() {
-        currentSectionTitle = "Please select count type";
-      });
-    }
-    if (currentSection == 4) {
-      if (formData['sku_type'] == "") {
-        showAlert(context, "Please select SKU");
+        showAlert(context, AlertState.info, "Please select bin");
         return;
       }
       setState(() {
         currentSectionTitle = "Please complete the form below";
       });
     }
+    // if (currentSection == 3) {
+    //   if (formData.skuType == "") {
+    //     showAlert(context, AlertState.info, "Please select SKU");
+    //     return;
+    //   }
+    //   setState(() {
+    //     currentSectionTitle = "Please complete the form below";
+    //   });
+    // }
 
     setState(() {
       currentSection = currentSection + 1;
@@ -222,90 +311,159 @@ class _WarehousePageState extends State<WarehousePage> {
         duration: Durations.short1, curve: Curves.easeIn);
   }
 
-  submitCount() async {
-    formData['pallet_count'] = _palletCountController.text;
+  bool validateFormData() {
+    formData.palletCount = _palletCountController.text;
 
-    formData['two_way_pallets_count'] = _twoWayCountController.text;
-    formData['four_way_pallets_count'] = _fourWayCountController.text;
-    formData['euro_pallets_count'] = _euroCountController.text;
+    formData.extras = _extrasController.text;
 
-    formData['extras'] = _extrasController.text;
-    if (formData['extras'] == "" || formData['sku_id'] == "") {
-      showAlert(context, "Kindly complete all fields");
-      return;
+    if (formData.extras == "" || formData.skuId == "") {
+      showAlert(context, AlertState.info, "Kindly complete all fields");
+      return false;
     }
+    var extraCountNumber = int.tryParse(formData.extras!);
 
 // CHECKS FOR FG
-    if (formData['sku_type'] == 'FG') {
-      if (formData['pallet_count'] == "" ||
-          formData['two_way_pallets_count'] == "" ||
-          formData['four_way_pallets_count'] == "" ||
-          formData['euro_pallets_count'] == "") {
-        showAlert(context, "Kindly complete all fields");
-        return;
+    if (formData.skuType == 'FG') {
+      if (formData.palletCount == "") {
+        showAlert(context, AlertState.info, "Kindly complete all fields");
+        return false;
       }
 
-      var palletCountNumber = int.tryParse(formData['pallet_count']!);
-      var twoWayPallet = int.tryParse(formData['two_way_pallets_count']!);
-      var fourWayPallet = int.tryParse(formData['four_way_pallets_count']!);
-      var euroPalletCount = int.tryParse(formData['euro_pallets_count']!);
+      var palletCountNumber = int.tryParse(formData.palletCount!);
 
-      if (palletCountNumber == null ||
-          twoWayPallet == null ||
-          fourWayPallet == null ||
-          euroPalletCount == null) {
-        showAlert(context, "Kindly enter valid counts");
-        return;
+      if (palletCountNumber == null || extraCountNumber == null) {
+        showAlert(context, AlertState.error, "Kindly enter valid counts");
+        return false;
       }
 
-      if (palletCountNumber !=
-          (twoWayPallet + fourWayPallet + euroPalletCount)) {
-        showAlert(context,
-            "Pallet count does not match the sum of 2-way, 4-way and Euro pallets");
-        return;
+      if (palletCountNumber == 0 && extraCountNumber == 0) {
+        showAlert(context, AlertState.info,
+            "Pallet count cannot be 0 if extras is 0");
+        return false;
       }
-    } else if (formData['sku_type'] == 'NFG') {
-      formData['pallet_count'] = "0";
-      formData['two_way_pallets_count'] = "0";
-      formData['four_way_pallets_count'] = "0";
-      formData['euro_pallets_count'] = "0";
+    } else if (formData.skuType == 'NFG') {
+      formData.palletCount = "0";
+
+      if (extraCountNumber == null) {
+        showAlert(context, AlertState.error, "Kindly enter valid counts");
+        return false;
+      }
+      if (extraCountNumber == 0) {
+        showAlert(context, AlertState.info, "Cases cannot be 0");
+        return false;
+      }
     }
 
-    formData['bin_id'] = bins['selected'].id;
+    if (formData.binId == null || formData.binId!.isEmpty) {
+      formData.binId = bins['selected'].id;
+    }
+    return true;
+  }
 
+  saveFormCount() {
+    if (validateFormData()) {
+      var sku = skus.data.firstWhere(
+        (e) => e.id == formData.skuId,
+      );
+      formData.skuName = sku.name;
+
+      savedFormData.add(formData.copy());
+      _resetForm();
+      Navigator.pop(context);
+    }
+  }
+
+  submitCount() async {
     print(formData);
-    showDialog(
-      context: context,
-      builder: (context) {
-        return const FullPageLoader();
-      },
-    );
+    ApiResponse<Sku>? response;
+    if (isCreate) {
+      if (savedFormData.length <= 0) {
+        return;
+      }
+      List<FormData> finalCounts = [];
 
-    ApiResponse<Sku>? response = await Api.instance.submitCount(formData);
+      for (var i = 0; i < savedFormData.length; i++) {
+        FormData savedItem = savedFormData[i];
+        if (finalCounts.isEmpty) {
+          finalCounts.add(savedItem.copy());
+        } else {
+          int index =
+              finalCounts.indexWhere((item) => item.skuId == savedItem.skuId);
+          if (index != -1) {
+            int? currentFinalPalletCount =
+                int.tryParse(finalCounts[index].palletCount);
+            int? savedPalletCount = int.tryParse(savedItem.palletCount);
+
+            if (currentFinalPalletCount == null || savedPalletCount == null) {
+              showAlert(context, AlertState.error,
+                  "kindly enter valid pallet counts");
+              return;
+            }
+            finalCounts[index].palletCount =
+                (currentFinalPalletCount + savedPalletCount).toString();
+
+// EXTRAS
+
+            int? currentFinalExtrasCount =
+                int.tryParse(finalCounts[index].extras);
+            int? savedExtrasCount = int.tryParse(savedItem.extras);
+
+            if (currentFinalExtrasCount == null || savedExtrasCount == null) {
+              showAlert(context, AlertState.error, "kindly enter valid extras");
+              return;
+            }
+            finalCounts[index].extras =
+                (currentFinalExtrasCount + savedExtrasCount).toString();
+          } else {
+            finalCounts.add(savedItem.copy());
+          }
+        }
+      }
+
+      List<Map<String, String>> finalList = [];
+      for (var i = 0; i < finalCounts.length; i++) {
+        finalList.add(finalCounts[i].toMap());
+      }
+
+      print(finalCounts);
+      showFullPageLoader(context);
+      print("loading");
+      response = await Api.instance.submitCount(finalList);
+    } else {
+      if (!validateFormData()) {
+        return;
+      }
+      showFullPageLoader(context);
+
+      response = await Api.instance.submitCount([formData.toMap()]);
+    }
     Navigator.of(context).pop();
     if (response != null && response.statusCode == 201) {
-      showAlert(context, "Welldone, stock count save successfully",
-          title: "Success", callback: () {
+      showAlert(context, AlertState.success, "Update successfully",
+          title: "Success", okCallback: () {
         checkForDiscrepancies();
       });
     } else if (response != null && response.message != "") {
-      showAlert(context, response.message);
+      showAlert(context, AlertState.error, response.message);
     } else {
-      showAlert(context, "Something went wrong");
+      showAlert(context, AlertState.error, "Something went wrong");
     }
+    _resetForm();
     setState(() {
-      formData['sku_id'] = "";
-      formData['pallet_count'] = "";
-      formData['two_way_pallets_count'] = "";
-      formData['four_way_pallets_count'] = "";
-      formData['euro_pallets_count'] = "";
-      formData['extras'] = "";
+      savedFormData = [];
+    });
+  }
+
+  _resetForm() {
+    setState(() {
+      formData.skuId = "";
+      // formData.binId = "";
+      formData.palletCount = "";
+      formData.extras = "";
+      casePerPalletCount = "";
     });
     _extrasController.clear();
     _palletCountController.clear();
-    _twoWayCountController.clear();
-    _fourWayCountController.clear();
-    _euroCountController.clear();
   }
 
   checkForDiscrepancies() async {
@@ -325,6 +483,80 @@ class _WarehousePageState extends State<WarehousePage> {
     }
   }
 
+  VoidCallback? _palletListener;
+  _initiateSKUAddition() {
+    void onTextChanged(context, setModalState) {
+      if (setModalState != null && Navigator.of(context).canPop()) {
+        setModalState(() {});
+      }
+    }
+
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            if (_palletListener != null) {
+              _palletCountController.removeListener(_palletListener!);
+            }
+            _palletListener = () {
+              if (Navigator.of(context).canPop()) {
+                setModalState(() {});
+              }
+            };
+            _palletCountController.addListener(_palletListener!);
+
+            return Padding(
+              padding: EdgeInsets.all(16),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.only(bottom: 30),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const SizedBox(width: 5),
+                          Container(
+                            height: 4,
+                            width: 40,
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () {
+                              _resetForm();
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ]),
+                    if (formData.skuType == "FG")
+                      buildSKUForm(setModalState)
+                    else
+                      buildNFGSKUForm(setModalState),
+                    Container(
+                        width: double.infinity,
+                        child: Button(onPressed: saveFormCount, text: "Save")),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Layout(
@@ -335,7 +567,20 @@ class _WarehousePageState extends State<WarehousePage> {
         ),
         foregroundColor: Colors.white,
         backgroundColor: constant.primaryColor,
+        actions: [
+          if (isCreate && currentSection == 3) _buildPositionedBottomPill()
+        ],
       ),
+      floatingActionButton: (isCreate && currentSection == 3)
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 120),
+              child: FloatingActionButton(
+                onPressed: _initiateSKUAddition,
+                backgroundColor: constant.appDark, // background
+                child: const Icon(Icons.add, size: 20, color: Colors.white),
+              ),
+            )
+          : null,
       child: Column(
         children: [
           if (warehouse['selected'].id != "" ||
@@ -353,7 +598,7 @@ class _WarehousePageState extends State<WarehousePage> {
                 children: [
                   if (warehouse['selected'].id != "")
                     Text(
-                      "Selected Warehouse: ${warehouse['selected'].name}",
+                      "Selected Counting Area: ${warehouse['selected'].name}",
                       style: const TextStyle(
                           fontWeight: FontWeight.w500, fontSize: 16),
                     ),
@@ -388,16 +633,16 @@ class _WarehousePageState extends State<WarehousePage> {
                     });
                   },
                 ),
-                LocationPageList(
-                  loading: location['loading'],
-                  list: location['data'].data,
-                  selected: location['selected'],
-                  selectMethod: (index) {
-                    setState(() {
-                      location['selected'] = location['data'].data[index];
-                    });
-                  },
-                ),
+                // LocationPageList(
+                //   loading: location['loading'],
+                //   list: location['data'].data,
+                //   selected: location['selected'],
+                //   selectMethod: (index) {
+                //     setState(() {
+                //       location['selected'] = location['data'].data[index];
+                //     });
+                //   },
+                // ),
                 BinPageList(
                   loading: bins['loading'],
                   list: bins['data'].data,
@@ -409,74 +654,23 @@ class _WarehousePageState extends State<WarehousePage> {
                   },
                 ),
                 //SELECT SKU TYPE
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 20),
-                    GestureDetector(
-                      onTap: () => {
-                        setState(() {
-                          formData['sku_type'] = "FG";
-                        }),
-                        _nextSection()
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                        margin: const EdgeInsets.only(bottom: 10),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(5),
-                          color: Colors.black12,
-                        ),
-                        child: const Text(
-                          "Count SKU",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    GestureDetector(
-                      onTap: () => {
-                        setState(() {
-                          formData['sku_type'] = "NFG";
-                        }),
-                        _nextSection()
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                        margin: const EdgeInsets.only(bottom: 10),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(5),
-                          color: Colors.black12,
-                        ),
-                        child: const Text(
-                          "Count NFG",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (formData['sku_type'] == "FG")
-                  buildSKUForm()
+
+                if (isCreate)
+                  buildSheetPage()
+                else if (formData.skuType == "FG")
+                  buildSKUForm(null)
                 else
-                  buildNFGSKUForm()
+                  buildNFGSKUForm(null),
+
+                // buildSKUForm(),
+                // buildNFGSKUForm(),
               ],
             ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              if (currentSection != 1)
+              if (currentSection != 1 && goback && currentSection != 3)
                 Expanded(
                   child: Button(
                       onPressed: _previousSection,
@@ -486,9 +680,9 @@ class _WarehousePageState extends State<WarehousePage> {
               const SizedBox(
                 width: 10,
               ),
-              if (currentSection != 5)
+              if (currentSection != 3)
                 Expanded(child: Button(onPressed: _nextSection, text: "Next"))
-              else
+              else if ((isCreate && savedFormData.length > 0) || !isCreate)
                 Expanded(child: Button(onPressed: submitCount, text: "Submit"))
             ],
           )
@@ -497,7 +691,76 @@ class _WarehousePageState extends State<WarehousePage> {
     );
   }
 
-  Widget buildSKUForm() {
+  _switchSkuType(String type) {
+    if (savedFormData.length > 0) {
+      showAlert(context, AlertState.info,
+          "Are you sure you want to switch, any unsaved sku count would be discarded",
+          okCallback: () {
+        setState(() {
+          formData.skuType = type;
+          savedFormData = [];
+        });
+      });
+    } else {
+      setState(() => formData.skuType = type);
+    }
+  }
+
+  Widget _buildPositionedBottomPill() {
+    // Bottom pill navigator
+    return Container(
+      padding: EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: constant.primaryColor,
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: () => _switchSkuType("FG"),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: formData.skuType == "FG"
+                    ? Colors.white
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                'FG',
+                style: TextStyle(
+                  color: formData.skuType == "FG" ? Colors.red : Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () => _switchSkuType("NFG"),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: formData.skuType == "NFG"
+                    ? Colors.white
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                'NFG',
+                style: TextStyle(
+                  color: formData.skuType == "NFG" ? Colors.red : Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildSKUForm(setModalState) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -525,11 +788,14 @@ class _WarehousePageState extends State<WarehousePage> {
                           skus: skus.data
                               .where((sku) => sku.skuType == "FG")
                               .toList(),
-                          selectedSkuId: formData['sku_id'] ?? "",
+                          selectedSkuId: formData.skuId ?? "",
                           onSkuSelected: (newValue) {
                             setState(() {
-                              formData['sku_id'] = newValue;
+                              formData.skuId = newValue;
                             });
+                            if (setModalState != null) {
+                              setModalState(() {});
+                            }
                           },
                         ),
                       ),
@@ -547,14 +813,11 @@ class _WarehousePageState extends State<WarehousePage> {
                       children: [
                         Expanded(
                           child: Text(
-                            formData['sku_id'] == ""
+                            formData.skuId == ""
                                 ? "Select an SKU"
-                                : skus.data
-                                    .firstWhere(
-                                        (sku) => sku.id == formData['sku_id'])
-                                    .name,
+                                : selectedSKU()?.name ?? "",
                             style: TextStyle(
-                              color: formData['sku_id'] == ""
+                              color: formData.skuId == ""
                                   ? Colors.black54
                                   : Colors.black,
                             ),
@@ -569,8 +832,7 @@ class _WarehousePageState extends State<WarehousePage> {
                   ),
                 ),
               ),
-              // const SizedBox(width: 8),
-              // InkWell(
+              //  / InkWell(
               // onTap: () {
               // print("Scanning barcode");
               // Navigator.push(
@@ -597,6 +859,24 @@ class _WarehousePageState extends State<WarehousePage> {
               // )
             ],
           ),
+          if (selectedSKU() != null) ...[
+            const SizedBox(
+              height: 3,
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.black12,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                "Case per Pallet: ${selectedSKU()!.casePerPallet.toString()}",
+                style: const TextStyle(
+                  color: Colors.black,
+                ),
+              ),
+            )
+          ],
           const SizedBox(height: 10),
           const Text(
             "Pallet Count",
@@ -606,8 +886,26 @@ class _WarehousePageState extends State<WarehousePage> {
             controller: _palletCountController,
             borderRadius: 10,
             keyboardType: TextInputType.number,
-            hintText: "Please enter pallet count",
+            hintText: "Enter count in pallets",
           ),
+          if (casePerPalletCount.isNotEmpty) ...[
+            const SizedBox(
+              height: 3,
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.black12,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                "Case per Pallet Count: $casePerPalletCount",
+                style: const TextStyle(
+                  color: Colors.black,
+                ),
+              ),
+            )
+          ],
           const SizedBox(height: 10),
           const Text(
             "Cases",
@@ -617,40 +915,7 @@ class _WarehousePageState extends State<WarehousePage> {
             controller: _extrasController,
             borderRadius: 10,
             keyboardType: TextInputType.number,
-            hintText: "Please enter any cases",
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            "2-Way Pallet Count",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-          CustomTextField.withController(
-            controller: _twoWayCountController,
-            borderRadius: 10,
-            keyboardType: TextInputType.number,
-            hintText: "Please enter the 2-way pallet count",
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            "4-Way Pallet Count",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-          CustomTextField.withController(
-            controller: _fourWayCountController,
-            borderRadius: 10,
-            keyboardType: TextInputType.number,
-            hintText: "Please enter the 4-way pallet count",
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            "Euro Pallet Count",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-          CustomTextField.withController(
-            controller: _euroCountController,
-            borderRadius: 10,
-            keyboardType: TextInputType.number,
-            hintText: "Please enter the euro pallet count",
+            hintText: "Enter count in cases",
           ),
           const SizedBox(height: 30),
         ],
@@ -658,7 +923,7 @@ class _WarehousePageState extends State<WarehousePage> {
     );
   }
 
-  Widget buildNFGSKUForm() {
+  Widget buildNFGSKUForm(setModalState) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -686,11 +951,14 @@ class _WarehousePageState extends State<WarehousePage> {
                           skus: skus.data
                               .where((sku) => sku.skuType == "NFG")
                               .toList(),
-                          selectedSkuId: formData['sku_id'] ?? "",
+                          selectedSkuId: formData.skuId ?? "",
                           onSkuSelected: (newValue) {
                             setState(() {
-                              formData['sku_id'] = newValue;
+                              formData.skuId = newValue;
                             });
+                            if (setModalState != null) {
+                              setModalState(() {});
+                            }
                           },
                         ),
                       ),
@@ -708,14 +976,14 @@ class _WarehousePageState extends State<WarehousePage> {
                       children: [
                         Expanded(
                           child: Text(
-                            formData['sku_id'] == ""
+                            formData.skuId == ""
                                 ? "Select an SKU"
                                 : skus.data
                                     .firstWhere(
-                                        (sku) => sku.id == formData['sku_id'])
+                                        (sku) => sku.id == formData.skuId)
                                     .name,
                             style: TextStyle(
-                              color: formData['sku_id'] == ""
+                              color: formData.skuId == ""
                                   ? Colors.black54
                                   : Colors.black,
                             ),
@@ -747,6 +1015,89 @@ class _WarehousePageState extends State<WarehousePage> {
         ],
       ),
     );
+  }
+
+  Widget buildSheetPage() {
+    return savedFormData.length <= 0
+        ? Padding(
+            padding: const EdgeInsets.only(top: 30),
+            child: Column(children: [
+              DottedBorder(
+                options: const RoundedRectDottedBorderOptions(
+                    dashPattern: [10, 5],
+                    strokeWidth: 2,
+                    padding: EdgeInsets.all(16),
+                    color: Colors.black12,
+                    radius: Radius.circular(15)),
+                child: Container(
+                  width: double.infinity,
+                  child: Column(children: [
+                    const Icon(Icons.inbox, size: 64, color: Colors.grey),
+                    const SizedBox(height: 8),
+                    Text(formData.skuType == "FG" ? "Add SKU" : "Add NFG SKU",
+                        style:
+                            const TextStyle(fontSize: 18, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    const Text("Click on the '+' button to begin count",
+                        style: TextStyle(fontSize: 14, color: Colors.grey)),
+                  ]),
+                ),
+              )
+            ]))
+        : ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: savedFormData.length,
+            itemBuilder: (context, index) {
+              final item = savedFormData[index];
+
+              return Container(
+                margin: EdgeInsets.only(bottom: 12),
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300, width: 1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Item text
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.skuName,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            '${item.skuType == "FG" ? "Pallets: ${item.palletCount}   |  " : ""}Cases: ${item.extras}',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Delete icon
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          savedFormData.removeAt(index);
+                        });
+                      },
+                      icon: Icon(Icons.delete, color: Colors.white),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        padding: EdgeInsets.all(4),
+                        shape: CircleBorder(),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
   }
 }
 

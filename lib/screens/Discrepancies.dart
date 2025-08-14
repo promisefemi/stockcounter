@@ -4,6 +4,7 @@ import 'package:stock_count_app/models/ApiResponse.dart';
 import 'package:stock_count_app/models/Bin.dart';
 import 'package:stock_count_app/models/Location.dart';
 import 'package:stock_count_app/models/Sku.dart';
+import 'package:stock_count_app/screens/Warehouse.dart';
 
 import 'package:stock_count_app/util/constant.dart' as constant;
 
@@ -24,7 +25,7 @@ class _DiscrepancyPageState extends State<DiscrepancyPage> {
   User user = User();
   bool pageLoading = false;
   List discrepancies = [];
-
+  Team? team;
   @override
   void initState() {
     super.initState();
@@ -42,12 +43,16 @@ class _DiscrepancyPageState extends State<DiscrepancyPage> {
       if (response == null) {
         return;
       }
+      ApiResponse<Team>? countingExercise =
+          await Api.instance.fetchActiveTeamCounting(userMap['id']);
+      print("clicking");
 
       if (response['data']['discrepancies'] != null) {
         setState(() {
           user = User.fromJson(userMap);
           discrepancies = response['data']['discrepancies'] as List;
           pageLoading = false;
+          team = countingExercise?.data;
         });
       }
     }
@@ -68,35 +73,67 @@ class _DiscrepancyPageState extends State<DiscrepancyPage> {
           ? const Center(
               child: CircularProgressIndicator(),
             )
-          : ListView.builder(
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  decoration: BoxDecoration(
-                      color: const Color.fromARGB(31, 156, 156, 156),
-                      borderRadius: BorderRadius.circular(5)),
-                  child: ListTile(
-                    title: Text(
-                      discrepancies[index]['sku_name'],
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Team: ${discrepancies[index]['team_name']}"),
-                        Text("Bin: ${discrepancies[index]['bin_name']}"),
-                        Text(
-                            "Resolved: ${discrepancies[index]['resolved'] == '0' ? 'NO' : 'YES'}"),
-                        Text(
-                            "Pallet discrepancy amount: ${discrepancies[index]['pallet_discrepancy_amount']}"),
-                        Text(
-                            "Extras discrepancy amount: ${discrepancies[index]['extras_discrepancy_amount']}"),
-                      ],
-                    ),
+          : Column(
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  color: Colors.blue.withOpacity(0.1),
+                  child: const Text(
+                    "Click on a discrepancy to resolve it",
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.blue),
                   ),
-                );
-              },
-              itemCount: discrepancies.length,
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemBuilder: (context, index) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        decoration: BoxDecoration(
+                            color: const Color.fromARGB(31, 156, 156, 156),
+                            borderRadius: BorderRadius.circular(5)),
+                        child: ListTile(
+                          onTap: () {
+                            if (team != null) {
+                              Navigator.of(context)
+                                  .push(MaterialPageRoute(builder: (context) {
+                                return WarehousePage(
+                                  countingExerciseId: discrepancies[index]
+                                      ['counting_exercise_id'],
+                                  teamId: team!.teamId,
+                                  bin_id: discrepancies[index]['bin_id'],
+                                  sku_id: discrepancies[index]['sku_id'],
+                                );
+                              }));
+                            }
+                          },
+                          title: Text(
+                            discrepancies[index]['sku_name'],
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Bin: ${discrepancies[index]['bin_name']}"),
+                              Text(
+                                  "Resolved: ${discrepancies[index]['resolved'] == '0' ? 'NO' : 'YES'}"),
+                              Text(
+                                  "Pallet discrepancy amount: ${discrepancies[index]['pallet_discrepancy_amount']}"),
+                              Text(
+                                  "Extras discrepancy amount: ${discrepancies[index]['extras_discrepancy_amount']}"),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                    itemCount: discrepancies.length,
+                  ),
+                ),
+              ],
             ),
     );
   }

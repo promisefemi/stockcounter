@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count_app/screens/Dashboard.dart';
 import 'package:stock_count_app/screens/Discrepancies.dart';
+import 'package:stock_count_app/screens/History.dart';
 import 'package:stock_count_app/screens/Login.dart';
 import 'package:stock_count_app/screens/Settings.dart';
 import 'package:stock_count_app/screens/Warehouse.dart';
@@ -39,9 +40,11 @@ class MyApp extends StatelessWidget {
       routes: {
         LoginPage.routeName: (context) => const LoginPage(),
         Dashboard.routeName: (context) => const Dashboard(),
-        WarehousePage.routeName: (context) => const WarehousePage(),
+        WarehousePage.routeName: (context) =>
+            WarehousePage(countingExerciseId: "", teamId: ""),
         Settings.routeName: (context) => Settings(),
         DiscrepancyPage.routeName: (context) => const DiscrepancyPage(),
+        HistoryPage.routeName: (context) => const HistoryPage(),
         // QrcodeScanner.routeName: (context) => const QrcodeScanner(),
       },
       initialRoute:

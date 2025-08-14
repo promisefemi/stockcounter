@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 import 'package:stock_count_app/util/constant.dart' as constant;
 
 class Layout extends StatelessWidget {
@@ -8,12 +7,13 @@ class Layout extends StatelessWidget {
     super.key,
     this.appBar,
     this.showBottomBar = true,
+    this.floatingActionButton,
     required this.child,
   });
   final Widget child;
   final PreferredSizeWidget? appBar;
   final bool showBottomBar;
-
+  final Widget? floatingActionButton;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -27,10 +27,11 @@ class Layout extends StatelessWidget {
             padding: const EdgeInsets.all(15),
             child: child,
           ),
+          floatingActionButton: floatingActionButton,
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
           // floatingActionButtonLocation:
           //     FloatingActionButtonLocation.centerDocked,
           //
-
         ),
       ),
     );

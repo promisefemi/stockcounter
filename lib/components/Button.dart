@@ -20,39 +20,29 @@ class Button extends StatelessWidget {
     ButtonStyle primaryStyle = ElevatedButton.styleFrom(
       // elevation: 0,
       backgroundColor: primaryColor,
-      padding: const EdgeInsets.symmetric(vertical: 15),
+      padding: const EdgeInsets.symmetric(vertical: 20),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(borderRadius),
       ),
     );
     ButtonStyle secondaryStyle = ElevatedButton.styleFrom(
       // elevation: 0,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[200],
       padding: const EdgeInsets.symmetric(vertical: 15),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     );
 
-    return Container(
-      decoration: style != null && style == buttonSecondary
-          ? BoxDecoration(
-              border: Border.all(
-                width: 1,
-                color: primaryColor,
-              ),
-              borderRadius: BorderRadius.circular(20))
-          : null,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: style != null && style == buttonSecondary
-            ? secondaryStyle
-            : primaryStyle,
-        child: Text(
-          text,
-          style: TextStyle(
-              color: style != null && style == buttonSecondary
-                  ? const Color.fromRGBO(52, 73, 94, 1)
-                  : Colors.white),
-        ),
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: style != null && style == buttonSecondary
+          ? secondaryStyle
+          : primaryStyle,
+      child: Text(
+        text,
+        style: TextStyle(
+            color: style != null && style == buttonSecondary
+                ? const Color.fromRGBO(52, 73, 94, 1)
+                : Colors.white),
       ),
     );
   }

@@ -3,10 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import 'package:stock_count_app/util/constant.dart' as constant;
+import 'package:stock_count_app/util/dialog.dart';
 
 import '../api/api.dart';
 import '../components/Button.dart';
-import '../components/CustomTextField..dart';
+import '../components/CustomTextField.dart';
 import '../models/ApiResponse.dart';
 import '../models/Login.dart';
 import '../util/shared_preference_helper.dart';
@@ -74,6 +75,7 @@ class _LoginPageState extends State<LoginPage> {
       if (response == null) {
         showAlert(
           context,
+          AlertState.error,
           "Something went wrong, please check your internet connection",
           title: "Error",
         );
@@ -83,6 +85,7 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode != 200) {
         showAlert(
             context,
+            AlertState.error,
             response.message != ""
                 ? response.message.toUpperCase()
                 : "Cannot connect to server");
@@ -104,6 +107,7 @@ class _LoginPageState extends State<LoginPage> {
       });
       showAlert(
         context,
+        AlertState.error,
         "Something went wrong, please check your internet connection",
         title: "Error",
       );

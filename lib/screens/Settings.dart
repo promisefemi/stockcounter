@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:stock_count_app/api/api.dart';
+import 'package:stock_count_app/components/Button.dart';
+import 'package:stock_count_app/components/CustomTextField.dart';
 import 'package:stock_count_app/components/Layout.dart';
+import 'package:stock_count_app/components/UpdatePassword.dart';
 import 'package:stock_count_app/models/User.dart';
 import 'package:stock_count_app/screens/Login.dart';
 import 'package:stock_count_app/util/constant.dart' as constant;
+import 'package:stock_count_app/util/dialog.dart';
 import 'package:stock_count_app/util/shared_preference_helper.dart';
 import 'package:stock_count_app/util/util.dart';
 
@@ -32,6 +37,15 @@ class _SettingsState extends State<Settings> {
     //   "ontap": (context) {}
     // },
   ];
+
+  String oldPassword = "";
+  String newPassword = "";
+  String confirmPassword = "";
+  bool _passwordResetLoading = false;
+
+  bool _showNewPassword = false;
+  bool _showConfirmPassword = false;
+
   User user = User();
 
   @override
@@ -50,11 +64,20 @@ class _SettingsState extends State<Settings> {
     }
   }
 
+  _handleChangePassword() {
+    print('Change password tapped');
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => UpdatePassword(),
+    );
+  }
+
   logout() async {
     final prefs = await SharedPreferencesHelper.getInstance();
 
-    showAlert(context, "Are you sure you want to logout", title: "Log out",
-        callback: () async {
+    showAlert(context, AlertState.warning, "Are you sure you want to logout",
+        title: "Log out", okCallback: () async {
       await prefs.remove(constant.apiKey);
       await prefs.remove(constant.userKey);
 
@@ -68,9 +91,9 @@ class _SettingsState extends State<Settings> {
   Widget build(BuildContext context) {
     return Layout(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           "Settings",
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         foregroundColor: Colors.white,
         backgroundColor: constant.primaryColor,
@@ -128,7 +151,26 @@ class _SettingsState extends State<Settings> {
               ),
             ),
             const SizedBox(height: 20),
-            const SizedBox(height: 20),
+            Container(
+              // padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: Colors.black12,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.only(bottom: 10),
+              child: ListTile(
+                leading: const Icon(
+                  Icons.key_rounded,
+                  color: Colors.black,
+                ),
+                title: const Text(
+                  "Change Password",
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                onTap: _handleChangePassword,
+              ),
+            ),
+            const SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
                 color: Colors.red[50],

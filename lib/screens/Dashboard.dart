@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'dart:io' show Platform;
 import 'package:intl/intl.dart';
+import 'package:stock_count_app/components/Button.dart';
 import 'package:stock_count_app/screens/Discrepancies.dart';
+import 'package:stock_count_app/screens/History.dart';
 import 'package:stock_count_app/screens/Settings.dart';
 
 import 'package:stock_count_app/util/constant.dart' as constant;
+import 'package:stock_count_app/util/dialog.dart';
 import 'package:stock_count_app/util/util.dart';
 
 import '../api/api.dart';
@@ -26,7 +30,7 @@ class _DashboardState extends State<Dashboard> {
   int currentLimit = 10;
   User user = User();
   int totalSKUcount = 0;
-
+  bool showDiscrepancyButton = false;
   List history = [];
 
   @override
@@ -38,15 +42,13 @@ class _DashboardState extends State<Dashboard> {
     _handleInitData();
   }
 
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   if (_isFirstLoad) {
-  //     _isFirstLoad = false;
-  //     // Perform your first-time load operations here
-  //     print('Widget just loaded for the first time');
-  //   }
-  // }
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Perform your first-time load operations here
+    print('Widget just loaded for the first time');
+  }
 
   _handleInitData() async {
     final prefs = await SharedPreferencesHelper.getInstance();
@@ -54,48 +56,46 @@ class _DashboardState extends State<Dashboard> {
     if (userMap != null) {
       setState(() {
         user = User.fromJson(userMap);
-        loadingHistory = true;
       });
+      _getDashboard();
+    }
+  }
 
-      var response = await Api.instance.getDashboard(user.id);
-      // var response = await Api.instance.getDashboard(");
+  _getDashboard() async {
+    setState(() {
+      loadingHistory = true;
+    });
+    var response = await Api.instance.getDashboard(user.id);
+    // var response = await Api.instance.getDashboard(");
+    setState(() {
+      loadingHistory = false;
+    });
+
+    print("===== === === === === =====");
+    print(response);
+    print("===== === === === === =====");
+
+    if (response == null) {
+      return;
+    }
+
+    if (response['status'] == false) {
+      // showAlert(context, response['message']);
+      return;
+    }
+
+    if (response['data'].containsKey("total_sku_count")) {
+      int totalCount = response['data']['total_sku_count'];
       setState(() {
-        loadingHistory = false;
+        totalSKUcount = totalCount;
       });
+    }
 
-      print(response);
-      if (response == null) {
-        showAlert(context, "an Error Occured");
-        return;
-      }
-
-      if (response['status'] == false) {
-        // showAlert(context, response['message']);
-        return;
-      }
-      if (response['data']["countSummary"] != null) {
-        var countSummary = response['data']['countSummary'] as List;
-
-        print(countSummary);
-        var preTotalCount = 0;
-
-        countSummary.forEach((cs) {
-          var number = int.tryParse(cs['total_sku_count']);
-          if (number != null) {
-            preTotalCount += number;
-          }
-        });
-
-        setState(() {
-          totalSKUcount = preTotalCount;
-        });
-      }
-
-      if (response['data']["countDetails"] != null) {
-        setState(() {
-          history = response['data']["countDetails"] as List;
-        });
-      }
+    if (response['data'].containsKey("history")) {
+      var countSummary = response['data']['history'] as List;
+      setState(() {
+        history = countSummary;
+      });
     }
   }
 
@@ -104,20 +104,63 @@ class _DashboardState extends State<Dashboard> {
     if (response == null) {
       return;
     }
+    print("DESCREPANCY");
+    print("DESCREPANCY TD");
 
-    print(response['data']['discrepancies']);
+    print(response);
     if (response['data']['discrepancies'] != null &&
         response['data']['discrepancies'].length > 0) {
-      Fluttertoast.showToast(
-        msg:
-            "There are ${response['data']['discrepancies'].length} discrepancies in the records",
-        toastLength: Toast.LENGTH_LONG,
-      );
+      if (Platform.isAndroid || Platform.isIOS) {
+        Fluttertoast.showToast(
+          msg:
+              "There are ${response['data']['discrepancies'].length} discrepancies in the records",
+          toastLength: Toast.LENGTH_LONG,
+        );
+      }
+      setState(() {
+        showDiscrepancyButton = true;
+      });
+    } else {
+      setState(() {
+        showDiscrepancyButton = false;
+      });
+    }
+  }
+
+  _checkForActiveTeamCountingSession() async {
+    showFullPageLoader(context);
+
+    var response = await Api.instance.fetchActiveTeamCounting(user.id);
+    print("clicking");
+
+    Navigator.pop(context);
+
+    if (response == null) {
+      return;
+    }
+
+    print(response.toJson());
+    if (!response.status) {
+      if (mounted) {
+        showAlert(context, AlertState.error, response.message);
+      }
+      return;
+    }
+    if (mounted) {
+      Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+        return WarehousePage(
+          teamId: response.data.teamId,
+          countingExerciseId: response.data.countingExcerciseId,
+        );
+      }));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!mounted) {
+      _getDashboard();
+    }
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(color: Colors.grey[200]),
@@ -129,43 +172,64 @@ class _DashboardState extends State<Dashboard> {
                     top: 10, left: 20, bottom: 20, right: 20),
                 child: Column(
                   children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).pushNamed(Settings.routeName);
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Column(
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          style: const ButtonStyle(
+                            backgroundColor: WidgetStatePropertyAll(
+                              Color.fromRGBO(237, 80, 86, 1),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.of(context)
+                                .pushNamed(HistoryPage.routeName);
+                          },
+                          icon: const Icon(
+                            Icons.refresh,
+                            size: 25,
+                            color: Colors.white,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).pushNamed(Settings.routeName);
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(
-                                user.fullName,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.black,
-                                ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    user.fullName,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  Text(
+                                    user.username,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  )
+                                ],
                               ),
-                              Text(
-                                user.username,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              const SizedBox(width: 5),
+                              const CircleAvatar(
+                                radius: 25.0,
+                                child: Icon(Icons.person, size: 40),
                               )
                             ],
                           ),
-                          const SizedBox(width: 5),
-                          const CircleAvatar(
-                            radius: 25.0,
-                            child: Icon(Icons.person, size: 40),
-                          )
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 25),
                     Row(
@@ -205,11 +269,7 @@ class _DashboardState extends State<Dashboard> {
                         Expanded(
                           child: Container(
                             child: GestureDetector(
-                              onTap: () {
-                                print("clicking");
-                                Navigator.of(context)
-                                    .pushNamed(WarehousePage.routeName);
-                              },
+                              onTap: _checkForActiveTeamCountingSession,
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 20, vertical: 30),
@@ -258,33 +318,34 @@ class _DashboardState extends State<Dashboard> {
                       ],
                     ),
                     const SizedBox(height: 15),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.of(context)
-                                  .pushNamed(DiscrepancyPage.routeName);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(15),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: const Color.fromARGB(255, 249, 49, 56),
-                              ),
-                              child: const Text(
-                                "See discrepancy list",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 16),
+                    if (showDiscrepancyButton)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.of(context)
+                                    .pushNamed(DiscrepancyPage.routeName);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: const Color.fromARGB(255, 249, 49, 56),
+                                ),
+                                child: const Text(
+                                  "See discrepancy list",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 16),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
                   ],
                 ),
               ),
@@ -302,11 +363,11 @@ class _DashboardState extends State<Dashboard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Row(
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            " History",
+                            "Daily count",
                             textAlign: TextAlign.start,
                             style: TextStyle(
                               fontSize: 14,
@@ -314,6 +375,19 @@ class _DashboardState extends State<Dashboard> {
                               color: Colors.black,
                             ),
                           ),
+                          TextButton(
+                              onPressed: () {
+                                _getDashboard();
+                                checkForDiscrepancies();
+                              },
+                              child: const Text(
+                                "Refresh",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.red,
+                                ),
+                              ))
                         ],
                       ),
                       if (loadingHistory)
@@ -326,9 +400,43 @@ class _DashboardState extends State<Dashboard> {
                           ),
                         )
                       else if (!loadingHistory && history.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Text("No History to show"),
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                                top: 70, left: 40, right: 40),
+                            child: Column(
+                              children: [
+                                const CircleAvatar(
+                                  radius: 37,
+                                  child: Icon(Icons.inbox, size: 35),
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                const Text(
+                                  "You have no counts yet",
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const Text(
+                                    textAlign: TextAlign.center,
+                                    "Start a new count by the 'New Count' button or review your history"),
+                                const SizedBox(height: 15),
+                                SizedBox(
+                                  width: 200,
+                                  child: Button(
+                                    text: "See History",
+                                    style: constant.buttonSecondary,
+                                    onPressed: () {
+                                      Navigator.of(context)
+                                          .pushNamed(HistoryPage.routeName);
+                                    },
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
                         )
                       else ...[
                         const SizedBox(
@@ -348,6 +456,18 @@ class _DashboardState extends State<Dashboard> {
                                           31, 156, 156, 156),
                                       borderRadius: BorderRadius.circular(5)),
                                   child: ListTile(
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                          MaterialPageRoute(builder: (context) {
+                                        return WarehousePage(
+                                          countingExerciseId: history[index]
+                                              ['counting_exercise_id'],
+                                          teamId: history[index]['team_id'],
+                                          bin_id: history[index]['bin_id'],
+                                          sku_id: history[index]['sku_id'],
+                                        );
+                                      }));
+                                    },
                                     title: Text(
                                       history[index]['sku_name'],
                                       style: TextStyle(
@@ -362,7 +482,7 @@ class _DashboardState extends State<Dashboard> {
                                         Text(
                                             "Bin: ${history[index]['bin_name']}"),
                                         Text(
-                                            "Warehouse: ${history[index]['warehouse_name']}"),
+                                            "Couting Area: ${history[index]['warehouse_name']}"),
                                       ],
                                     ),
                                     trailing: Text(
