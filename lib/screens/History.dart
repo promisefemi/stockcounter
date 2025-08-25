@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'package:stock_count_app/api/api.dart';
 import 'package:stock_count_app/components/Layout.dart';
+import 'package:stock_count_app/components/SKUName.dart';
 import 'package:stock_count_app/models/User.dart';
 import 'package:stock_count_app/screens/Dashboard.dart';
 import 'package:stock_count_app/util/constant.dart' as constant;
@@ -292,11 +293,9 @@ class _HistoryPageState extends State<HistoryPage> {
                                     child: Stack(
                                       children: [
                                         ListTile(
-                                          title: Text(
-                                            d['sku_name'],
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.w700),
-                                          ),
+                                          title: SKUName(
+                                              name: d['sku_name'],
+                                              countType: d['count_type']),
                                           subtitle: Table(
                                             columnWidths: const {
                                               0: FlexColumnWidth(1),

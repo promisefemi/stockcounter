@@ -72,6 +72,7 @@ class WarehousePage extends StatefulWidget {
     required this.teamId,
     this.bin_id,
     this.sku_id,
+    this.count_type,
   });
   static const routeName = "/WarehousePage";
 
@@ -79,6 +80,7 @@ class WarehousePage extends StatefulWidget {
   final String teamId;
   final String? bin_id;
   final String? sku_id;
+  final String? count_type;
 
   @override
   State<WarehousePage> createState() => _WarehousePageState();
@@ -172,6 +174,7 @@ class _WarehousePageState extends State<WarehousePage> {
         setState(() {
           formData.skuId = widget.sku_id!;
           formData.binId = widget.bin_id!;
+          formData.countType = widget.count_type ?? "GOOD";
 
           formData.skuType = selectedSKU()?.skuType ?? "";
           currentSection = 3;
@@ -395,8 +398,9 @@ class _WarehousePageState extends State<WarehousePage> {
         if (finalCounts.isEmpty) {
           finalCounts.add(savedItem.copy());
         } else {
-          int index =
-              finalCounts.indexWhere((item) => item.skuId == savedItem.skuId);
+          int index = finalCounts.indexWhere((item) =>
+              (item.skuId == savedItem.skuId &&
+                  item.countType == savedItem.countType));
           if (index != -1) {
             int? currentFinalPalletCount =
                 int.tryParse(finalCounts[index].palletCount);
@@ -432,8 +436,9 @@ class _WarehousePageState extends State<WarehousePage> {
       for (var i = 0; i < finalCounts.length; i++) {
         finalList.add(finalCounts[i].toMap());
       }
-
-      print(finalCounts);
+      // print(finalList);
+      // return;
+      // print(finalCounts);
       showFullPageLoader(context);
       print("loading");
       response = await Api.instance.submitCount(finalList);
@@ -966,16 +971,18 @@ class _WarehousePageState extends State<WarehousePage> {
                     child: Text(value),
                   );
                 }).toList(),
-                onChanged: (newValue) {
-                  if (newValue != null) {
-                    setState(() {
-                      formData.countType = newValue;
-                    });
-                    if (setModalState != null) {
-                      setModalState(() {});
-                    }
-                  }
-                },
+                onChanged: widget.count_type == null
+                    ? (newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            formData.countType = newValue;
+                          });
+                          if (setModalState != null) {
+                            setModalState(() {});
+                          }
+                        }
+                      }
+                    : null,
               ),
             ),
             const SizedBox(height: 30),

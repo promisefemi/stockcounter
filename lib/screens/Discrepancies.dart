@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count_app/components/Layout.dart';
+import 'package:stock_count_app/components/SKUName.dart';
 import 'package:stock_count_app/models/ApiResponse.dart';
 import 'package:stock_count_app/models/Bin.dart';
 import 'package:stock_count_app/models/Location.dart';
@@ -108,14 +109,15 @@ class _DiscrepancyPageState extends State<DiscrepancyPage> {
                                   teamId: team!.teamId,
                                   bin_id: discrepancies[index]['bin_id'],
                                   sku_id: discrepancies[index]['sku_id'],
+                                  count_type: discrepancies[index]
+                                      ['count_type'],
                                 );
                               }));
                             }
                           },
-                          title: Text(
-                            discrepancies[index]['sku_name'],
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
+                          title: SKUName(
+                              name: discrepancies[index]['sku_name'],
+                              countType: discrepancies[index]['count_type']),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

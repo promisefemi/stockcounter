@@ -3,6 +3,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'dart:io' show Platform;
 import 'package:intl/intl.dart';
 import 'package:stock_count_app/components/Button.dart';
+import 'package:stock_count_app/components/SKUName.dart';
 import 'package:stock_count_app/screens/Discrepancies.dart';
 import 'package:stock_count_app/screens/History.dart';
 import 'package:stock_count_app/screens/Settings.dart';
@@ -519,14 +520,21 @@ class _DashboardState extends State<Dashboard> {
                                                       ['bin_id'],
                                                   sku_id: history[index]
                                                       ['sku_id'],
+                                                  count_type: history[index]
+                                                      ['count_type'],
                                                 );
                                               }));
                                             },
-                                            title: Text(
-                                              history[index]['sku_name'],
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.w700),
-                                            ),
+                                            title: SKUName(
+                                                name: history[index]
+                                                    ['sku_name'],
+                                                countType: history[index]
+                                                    ['count_type']),
+                                            // Text(
+                                            //   history[index]['sku_name'],
+                                            //   style: TextStyle(
+                                            //       fontWeight: FontWeight.w700),
+                                            // ),
                                             subtitle: Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
