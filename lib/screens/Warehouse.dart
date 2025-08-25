@@ -34,6 +34,7 @@ class FormData {
   String palletCount = "";
   String extras = "";
   String skuType = "FG";
+  String countType = "GOOD";
 
   Map<String, String> toMap() {
     return {
@@ -45,6 +46,7 @@ class FormData {
       'pallet_count': palletCount,
       'extras': extras,
       'sku_type': skuType,
+      'count_type': countType,
     };
   }
 
@@ -58,6 +60,7 @@ class FormData {
       ..skuName = skuName
       ..palletCount = palletCount
       ..extras = extras
+      ..countType = countType
       ..skuType = skuType;
   }
 }
@@ -108,6 +111,8 @@ class _WarehousePageState extends State<WarehousePage> {
     'data': BinList(),
     'selected': Bin()
   };
+
+  final List<String> options = ["GOOD", "BAD"];
   final PageController _pageViewController = PageController(initialPage: 0);
   final _palletCountController = TextEditingController();
   final _extrasController = TextEditingController();
@@ -231,7 +236,10 @@ class _WarehousePageState extends State<WarehousePage> {
     });
     ApiResponse<BinList>? response =
         await Api.instance.fetchBins(warehouse['selected'].id);
-    if (response != null && response.statusCode == 200) {
+
+    print(response);
+
+    if (response != null) {
       setState(() {
         bins['data'] = response.data;
         bins['loading'] = false;
@@ -460,6 +468,7 @@ class _WarehousePageState extends State<WarehousePage> {
       // formData.binId = "";
       formData.palletCount = "";
       formData.extras = "";
+      formData.countType = "GOOD";
       casePerPalletCount = "";
     });
     _extrasController.clear();
@@ -467,7 +476,7 @@ class _WarehousePageState extends State<WarehousePage> {
   }
 
   checkForDiscrepancies() async {
-    var response = await Api.instance.getDiscrepancies();
+    var response = await Api.instance.getDiscrepancies(user.id);
     if (response == null) {
       return;
     }
@@ -511,43 +520,46 @@ class _WarehousePageState extends State<WarehousePage> {
             };
             _palletCountController.addListener(_palletListener!);
 
-            return Padding(
-              padding: EdgeInsets.all(16),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.only(bottom: 30),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const SizedBox(width: 5),
-                          Container(
-                            height: 4,
-                            width: 40,
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(2),
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.only(bottom: 30),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const SizedBox(width: 5),
+                            Container(
+                              height: 4,
+                              width: 40,
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(2),
+                              ),
                             ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () {
-                              _resetForm();
-                              Navigator.pop(context);
-                            },
-                          ),
-                        ]),
-                    if (formData.skuType == "FG")
-                      buildSKUForm(setModalState)
-                    else
-                      buildNFGSKUForm(setModalState),
-                    Container(
-                        width: double.infinity,
-                        child: Button(onPressed: saveFormCount, text: "Save")),
-                  ],
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () {
+                                _resetForm();
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ]),
+                      if (formData.skuType == "FG")
+                        buildSKUForm(setModalState)
+                      else
+                        buildNFGSKUForm(setModalState),
+                      Container(
+                          width: double.infinity,
+                          child:
+                              Button(onPressed: saveFormCount, text: "Save")),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -761,164 +773,214 @@ class _WarehousePageState extends State<WarehousePage> {
   }
 
   Widget buildSKUForm(setModalState) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 10),
-          const Text(
-            "SKUs",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: InkWell(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) => DraggableScrollableSheet(
-                        initialChildSize: 0.7,
-                        minChildSize: 0.5,
-                        maxChildSize: 0.95,
-                        builder: (_, controller) => SkuBottomSheet(
-                          skus: skus.data
-                              .where((sku) => sku.skuType == "FG")
-                              .toList(),
-                          selectedSkuId: formData.skuId ?? "",
-                          onSkuSelected: (newValue) {
-                            setState(() {
-                              formData.skuId = newValue;
-                            });
-                            if (setModalState != null) {
-                              setModalState(() {});
-                            }
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 14),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            formData.skuId == ""
-                                ? "Select an SKU"
-                                : selectedSKU()?.name ?? "",
-                            style: TextStyle(
-                              color: formData.skuId == ""
-                                  ? Colors.black54
-                                  : Colors.black,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom >= 20
+              ? MediaQuery.of(context).viewInsets.bottom - 20
+              : MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 10),
+            const Text(
+              "SKUs",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => DraggableScrollableSheet(
+                          initialChildSize: 0.7,
+                          minChildSize: 0.5,
+                          maxChildSize: 0.95,
+                          builder: (_, controller) => SkuBottomSheet(
+                            skus: skus.data
+                                .where((sku) => sku.skuType == "FG")
+                                .toList(),
+                            selectedSkuId: formData.skuId ?? "",
+                            onSkuSelected: (newValue) {
+                              setState(() {
+                                formData.skuId = newValue;
+                              });
+                              if (setModalState != null) {
+                                setModalState(() {});
+                              }
+                            },
                           ),
                         ),
-                        const Icon(Icons.arrow_drop_down,
-                            color: Colors.black54),
-                      ],
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 14),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              formData.skuId == ""
+                                  ? "Select an SKU"
+                                  : selectedSKU()?.name ?? "",
+                              style: TextStyle(
+                                color: formData.skuId == ""
+                                    ? Colors.black54
+                                    : Colors.black,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                          const Icon(Icons.arrow_drop_down,
+                              color: Colors.black54),
+                        ],
+                      ),
                     ),
                   ),
                 ),
+                //  / InkWell(
+                // onTap: () {
+                // print("Scanning barcode");
+                // Navigator.push(
+                //     context,
+                //     MaterialPageRoute(
+                //       builder: (context) => QrcodeScanner(
+                //         callback: (result) {
+                //           print(result);
+                //           print("asdkfsldkksd");
+                //         },
+                //         text: "Scan SKU Barcode",
+                //       ),
+                //     ));
+                //   },
+                //   child: Container(
+                //     padding: const EdgeInsets.symmetric(
+                //         horizontal: 12, vertical: 14),
+                //     decoration: BoxDecoration(
+                //       border: Border.all(color: Colors.black12),
+                //       borderRadius: BorderRadius.circular(10),
+                //     ),
+                //     child: const Icon(Icons.qr_code),
+                //   ),
+                // )
+              ],
+            ),
+            if (selectedSKU() != null) ...[
+              const SizedBox(
+                height: 3,
               ),
-              //  / InkWell(
-              // onTap: () {
-              // print("Scanning barcode");
-              // Navigator.push(
-              //     context,
-              //     MaterialPageRoute(
-              //       builder: (context) => QrcodeScanner(
-              //         callback: (result) {
-              //           print(result);
-              //           print("asdkfsldkksd");
-              //         },
-              //         text: "Scan SKU Barcode",
-              //       ),
-              //     ));
-              //   },
-              //   child: Container(
-              //     padding: const EdgeInsets.symmetric(
-              //         horizontal: 12, vertical: 14),
-              //     decoration: BoxDecoration(
-              //       border: Border.all(color: Colors.black12),
-              //       borderRadius: BorderRadius.circular(10),
-              //     ),
-              //     child: const Icon(Icons.qr_code),
-              //   ),
-              // )
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  "Case per Pallet: ${selectedSKU()!.casePerPallet.toString()}",
+                  style: const TextStyle(
+                    color: Colors.black,
+                  ),
+                ),
+              ),
             ],
-          ),
-          if (selectedSKU() != null) ...[
-            const SizedBox(
-              height: 3,
+            const SizedBox(height: 10),
+            const Text(
+              "Pallet Count",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            CustomTextField.withController(
+              controller: _palletCountController,
+              borderRadius: 10,
+              keyboardType: TextInputType.number,
+              hintText: "Enter count in pallets",
+            ),
+            if (casePerPalletCount.isNotEmpty) ...[
+              const SizedBox(
+                height: 3,
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  "Case per Pallet Count: $casePerPalletCount",
+                  style: const TextStyle(
+                    color: Colors.black,
+                  ),
+                ),
+              )
+            ],
+            const SizedBox(height: 10),
+            const Text(
+              "Cases",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            CustomTextField.withController(
+              controller: _extrasController,
+              borderRadius: 10,
+              keyboardType: TextInputType.number,
+              hintText: "Enter count in cases",
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              "Count Type",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              margin: const EdgeInsets.only(top: 10),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 2,
+              ),
               decoration: BoxDecoration(
-                color: Colors.black12,
+                border: Border.all(
+                  color: Theme.of(context).primaryColor,
+                  width: 1,
+                ),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(
-                "Case per Pallet: ${selectedSKU()!.casePerPallet.toString()}",
-                style: const TextStyle(
-                  color: Colors.black,
-                ),
+              child: DropdownButton<String>(
+                hint: const Text("Select count type"),
+                value: formData.countType,
+                underline: const SizedBox.shrink(),
+                isExpanded: true,
+                items: options.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      formData.countType = newValue;
+                    });
+                    if (setModalState != null) {
+                      setModalState(() {});
+                    }
+                  }
+                },
               ),
-            )
-          ],
-          const SizedBox(height: 10),
-          const Text(
-            "Pallet Count",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-          CustomTextField.withController(
-            controller: _palletCountController,
-            borderRadius: 10,
-            keyboardType: TextInputType.number,
-            hintText: "Enter count in pallets",
-          ),
-          if (casePerPalletCount.isNotEmpty) ...[
-            const SizedBox(
-              height: 3,
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.black12,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                "Case per Pallet Count: $casePerPalletCount",
-                style: const TextStyle(
-                  color: Colors.black,
-                ),
-              ),
-            )
+            const SizedBox(height: 30),
           ],
-          const SizedBox(height: 10),
-          const Text(
-            "Cases",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-          CustomTextField.withController(
-            controller: _extrasController,
-            borderRadius: 10,
-            keyboardType: TextInputType.number,
-            hintText: "Enter count in cases",
-          ),
-          const SizedBox(height: 30),
-        ],
+        ),
       ),
     );
   }
@@ -1045,8 +1107,8 @@ class _WarehousePageState extends State<WarehousePage> {
               )
             ]))
         : ListView.builder(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            // shrinkWrap: true,
+            // physics: NeverScrollableScrollPhysics(),
             itemCount: savedFormData.length,
             itemBuilder: (context, index) {
               final item = savedFormData[index];
@@ -1066,11 +1128,51 @@ class _WarehousePageState extends State<WarehousePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            item.skuName,
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16),
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: item.skuName + " ",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                WidgetSpan(
+                                  alignment: PlaceholderAlignment
+                                      .middle, // keeps pill aligned
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: item.countType == "GOOD"
+                                          ? Colors.green[100]
+                                          : Colors.red[100],
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      item.countType,
+                                      style: TextStyle(
+                                        color: item.countType == "GOOD"
+                                            ? Colors.green
+                                            : Colors.red,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            softWrap:
+                                true, // allows wrapping if skuName is long
                           ),
+
+                          // Text(
+                          //   item.skuName,
+                          //   style: TextStyle(
+                          //       fontWeight: FontWeight.bold, fontSize: 16),
+                          // ),
                           SizedBox(height: 4),
                           Text(
                             '${item.skuType == "FG" ? "Pallets: ${item.palletCount}   |  " : ""}Cases: ${item.extras}',
@@ -1121,32 +1223,59 @@ class WarehousePageList extends StatelessWidget {
           ? const Center(
               child: CircularProgressIndicator(),
             )
-          : ListView.builder(
-              itemBuilder: (context, index) {
-                return Container(
-                  // padding: const EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                    color: Colors.black12,
-                  ),
-                  margin: const EdgeInsets.only(bottom: 10),
-                  child: ListTile(
-                    title: Text(
-                      list[index].name,
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    subtitle: Text(list[index].description),
-                    onTap: () => selectMethod(index),
-                    trailing: selected.id == list[index].id
-                        ? const Icon(
-                            Icons.check,
-                            color: Colors.green,
-                          )
-                        : null,
-                  ),
-                );
-              },
-              itemCount: list.length,
-            ),
+          : list.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.only(top: 30),
+                  child: Column(children: [
+                    DottedBorder(
+                      options: RoundedRectDottedBorderOptions(
+                          dashPattern: [10, 5],
+                          strokeWidth: 2,
+                          padding: EdgeInsets.all(16),
+                          color: Colors.black12,
+                          radius: Radius.circular(15)),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Column(children: [
+                          Icon(Icons.inbox, size: 64, color: Colors.grey),
+                          SizedBox(height: 8),
+                          Text("No availble warehouse",
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.grey)),
+                          SizedBox(height: 4),
+                          Text("Please contact your administrator",
+                              style:
+                                  TextStyle(fontSize: 14, color: Colors.grey)),
+                        ]),
+                      ),
+                    )
+                  ]))
+              : ListView.builder(
+                  itemBuilder: (context, index) {
+                    return Container(
+                      // padding: const EdgeInsets.all(5),
+                      decoration: const BoxDecoration(
+                        color: Colors.black12,
+                      ),
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: ListTile(
+                        title: Text(
+                          list[index].name,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: Text(list[index].description),
+                        onTap: () => selectMethod(index),
+                        trailing: selected.id == list[index].id
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.green,
+                              )
+                            : null,
+                      ),
+                    );
+                  },
+                  itemCount: list.length,
+                ),
     );
   }
 }
@@ -1221,31 +1350,58 @@ class BinPageList extends StatelessWidget {
           ? const Center(
               child: CircularProgressIndicator(),
             )
-          : ListView.builder(
-              itemBuilder: (context, index) {
-                return Container(
-                  // padding: const EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                    color: Colors.black12,
-                  ),
-                  margin: const EdgeInsets.only(bottom: 10),
-                  child: ListTile(
-                    title: Text(
-                      list[index].name,
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    onTap: () => selectMethod(index),
-                    trailing: selected.id == list[index].id
-                        ? const Icon(
-                            Icons.check,
-                            color: Colors.green,
-                          )
-                        : null,
-                  ),
-                );
-              },
-              itemCount: list.length,
-            ),
+          : list.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.only(top: 30),
+                  child: Column(children: [
+                    DottedBorder(
+                      options: RoundedRectDottedBorderOptions(
+                          dashPattern: [10, 5],
+                          strokeWidth: 2,
+                          padding: EdgeInsets.all(16),
+                          color: Colors.black12,
+                          radius: Radius.circular(15)),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Column(children: [
+                          Icon(Icons.inbox, size: 64, color: Colors.grey),
+                          SizedBox(height: 8),
+                          Text("No availble bin",
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.grey)),
+                          SizedBox(height: 4),
+                          Text("Please select a different Counting Area",
+                              style:
+                                  TextStyle(fontSize: 14, color: Colors.grey)),
+                        ]),
+                      ),
+                    )
+                  ]))
+              : ListView.builder(
+                  itemBuilder: (context, index) {
+                    return Container(
+                      // padding: const EdgeInsets.all(5),
+                      decoration: const BoxDecoration(
+                        color: Colors.black12,
+                      ),
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: ListTile(
+                        title: Text(
+                          list[index].name,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        onTap: () => selectMethod(index),
+                        trailing: selected.id == list[index].id
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.green,
+                              )
+                            : null,
+                      ),
+                    );
+                  },
+                  itemCount: list.length,
+                ),
     );
   }
 }

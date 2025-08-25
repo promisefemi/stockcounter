@@ -220,15 +220,25 @@ class Api {
     if (response == null) {
       return null;
     }
-
+    print(response);
+    print(response.runtimeType);
+    print(response['responseBody'].runtimeType);
     return ApiResponse<BinList>(
         status: response['statusCode'] != null && response['statusCode'] == 200
             ? true
             : false,
-        message: response['responseBody'].contains('message')
-            ? response['responseBody']['message']
+        message: response.containsKey('responseBody')
+            ? response['responseBody'] is Map
+                ? response['responseBody'].containsKey('message')
+                    ? response['responseBody']['message']
+                    : ""
+                : ""
             : "",
-        data: BinList.fromJson(response['responseBody']), // Safe cast
+        data: response.containsKey("responseBody")
+            ? response['responseBody'] is List
+                ? BinList.fromJson(response['responseBody'])
+                : BinList()
+            : BinList(), // Safe cast
         statusCode: response['statusCode']);
   }
 
@@ -289,8 +299,47 @@ class Api {
     };
   }
 
-  Future<Map?> getDiscrepancies() async {
-    var response = await _get("discrepancies-list", {});
+  Future<Map?> finalizeCount(String id) async {
+    var response = await _post("finalize-counter-count/$id", {});
+
+    if (response == null) {
+      return null;
+    }
+
+    print(response);
+
+    return {
+      "status": response['statusCode'] != null && response['statusCode'] == 200
+          ? true
+          : false,
+
+      "message": response['responseBody'] is Map
+          ? (response['responseBody']['message'] ??
+              response['responseBody']['messages']?['error'] ??
+              "Unknown error")
+          : response['responseBody'].toString(), // Safe cast
+      "statusCode": response['statusCode']
+    };
+  }
+
+  Future<Map?> checkUserCompletedCount(String id) async {
+    var response = await _get("check-finalize-count/$id", {});
+
+    if (response == null) {
+      return null;
+    }
+    // print(response);
+
+    return {
+      "status": response['statusCode'] != null && response['statusCode'] == 200
+          ? true
+          : false,
+      "statusCode": response['statusCode']
+    };
+  }
+
+  Future<Map?> getDiscrepancies(String id) async {
+    var response = await _get("discrepancies-list/${id}", {});
 
     if (response == null) {
       return null;

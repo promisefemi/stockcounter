@@ -39,7 +39,8 @@ class _DiscrepancyPageState extends State<DiscrepancyPage> {
     final prefs = await SharedPreferencesHelper.getInstance();
     var userMap = prefs.getMap(constant.userKey);
     if (userMap != null) {
-      var response = await Api.instance.getDiscrepancies();
+      User _user = User.fromJson(userMap);
+      var response = await Api.instance.getDiscrepancies(_user.id);
       if (response == null) {
         return;
       }
@@ -49,7 +50,7 @@ class _DiscrepancyPageState extends State<DiscrepancyPage> {
 
       if (response['data']['discrepancies'] != null) {
         setState(() {
-          user = User.fromJson(userMap);
+          user = _user;
           discrepancies = response['data']['discrepancies'] as List;
           pageLoading = false;
           team = countingExercise?.data;

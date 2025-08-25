@@ -111,6 +111,7 @@ showAlert(
                 fontWeight: FontWeight.w500,
                 color: Colors.black,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
           const SizedBox(height: 15),

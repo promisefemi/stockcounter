@@ -37,12 +37,17 @@ class Button extends StatelessWidget {
       style: style != null && style == buttonSecondary
           ? secondaryStyle
           : primaryStyle,
-      child: Text(
-        text,
-        style: TextStyle(
-            color: style != null && style == buttonSecondary
-                ? const Color.fromRGBO(52, 73, 94, 1)
-                : Colors.white),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 25,
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+              color: style != null && style == buttonSecondary
+                  ? const Color.fromRGBO(52, 73, 94, 1)
+                  : Colors.white),
+        ),
       ),
     );
   }

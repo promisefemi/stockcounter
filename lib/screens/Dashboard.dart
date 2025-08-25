@@ -31,13 +31,12 @@ class _DashboardState extends State<Dashboard> {
   User user = User();
   int totalSKUcount = 0;
   bool showDiscrepancyButton = false;
+  bool showCertifyButton = true;
   List history = [];
 
   @override
   void initState() {
     super.initState();
-
-    checkForDiscrepancies();
 
     _handleInitData();
   }
@@ -45,7 +44,6 @@ class _DashboardState extends State<Dashboard> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
     // Perform your first-time load operations here
     print('Widget just loaded for the first time');
   }
@@ -58,6 +56,8 @@ class _DashboardState extends State<Dashboard> {
         user = User.fromJson(userMap);
       });
       _getDashboard();
+      checkForDiscrepancies();
+      checkForUserTeamCountingStatus();
     }
   }
 
@@ -100,7 +100,7 @@ class _DashboardState extends State<Dashboard> {
   }
 
   checkForDiscrepancies() async {
-    var response = await Api.instance.getDiscrepancies();
+    var response = await Api.instance.getDiscrepancies(user.id);
     if (response == null) {
       return;
     }
@@ -125,6 +125,45 @@ class _DashboardState extends State<Dashboard> {
         showDiscrepancyButton = false;
       });
     }
+  }
+
+  checkForUserTeamCountingStatus() async {
+    var response = await Api.instance.checkUserCompletedCount(user.id);
+    if (response == null) {
+      return;
+    }
+
+    if (response['status']) {
+      setState(() {
+        showCertifyButton = false;
+      });
+    } else {
+      setState(() {
+        showCertifyButton = true;
+      });
+    }
+  }
+
+  initiatefinalizeCount() async {
+    showAlert(context, AlertState.error,
+        "Once finalized, you will not be able to make any further changes to the counts.",
+        title: "Are you sure you want to finalize?",
+        okText: "Finalize",
+        showCancel: true, okCallback: () async {
+      showFullPageLoader(context);
+      var response = await Api.instance.finalizeCount(user.id);
+      Navigator.of(context).pop();
+      if (response == null) {
+        return;
+      }
+
+      print(response);
+      if (response['status']) {
+        showAlert(context, AlertState.success, response['message']);
+      } else {
+        showAlert(context, AlertState.error, response['message']);
+      }
+    });
   }
 
   _checkForActiveTeamCountingSession() async {
@@ -447,55 +486,80 @@ class _DashboardState extends State<Dashboard> {
                             onRefresh: () async {
                               _handleInitData();
                             },
-                            child: ListView.builder(
-                              itemBuilder: (context, index) {
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 10),
-                                  decoration: BoxDecoration(
-                                      color: const Color.fromARGB(
-                                          31, 156, 156, 156),
-                                      borderRadius: BorderRadius.circular(5)),
-                                  child: ListTile(
-                                    onTap: () {
-                                      Navigator.of(context).push(
-                                          MaterialPageRoute(builder: (context) {
-                                        return WarehousePage(
-                                          countingExerciseId: history[index]
-                                              ['counting_exercise_id'],
-                                          teamId: history[index]['team_id'],
-                                          bin_id: history[index]['bin_id'],
-                                          sku_id: history[index]['sku_id'],
+                            child: SingleChildScrollView(
+                              child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    ListView.builder(
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      shrinkWrap: true,
+                                      itemBuilder: (context, index) {
+                                        return Container(
+                                          margin:
+                                              const EdgeInsets.only(bottom: 10),
+                                          decoration: BoxDecoration(
+                                              color: const Color.fromARGB(
+                                                  31, 156, 156, 156),
+                                              borderRadius:
+                                                  BorderRadius.circular(5)),
+                                          child: ListTile(
+                                            onTap: () {
+                                              Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                      builder: (context) {
+                                                return WarehousePage(
+                                                  countingExerciseId: history[
+                                                          index]
+                                                      ['counting_exercise_id'],
+                                                  teamId: history[index]
+                                                      ['team_id'],
+                                                  bin_id: history[index]
+                                                      ['bin_id'],
+                                                  sku_id: history[index]
+                                                      ['sku_id'],
+                                                );
+                                              }));
+                                            },
+                                            title: Text(
+                                              history[index]['sku_name'],
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.w700),
+                                            ),
+                                            subtitle: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                    "Team: ${history[index]['team_name']}"),
+                                                Text(
+                                                    "Bin: ${history[index]['bin_name']}"),
+                                                Text(
+                                                    "Couting Area: ${history[index]['warehouse_name']}"),
+                                              ],
+                                            ),
+                                            trailing: Text(
+                                              history[index]['total_sku_cases'],
+                                              style: const TextStyle(
+                                                fontSize: 17,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
                                         );
-                                      }));
-                                    },
-                                    title: Text(
-                                      history[index]['sku_name'],
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w700),
+                                      },
+                                      itemCount: history.length,
                                     ),
-                                    subtitle: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                            "Team: ${history[index]['team_name']}"),
-                                        Text(
-                                            "Bin: ${history[index]['bin_name']}"),
-                                        Text(
-                                            "Couting Area: ${history[index]['warehouse_name']}"),
-                                      ],
-                                    ),
-                                    trailing: Text(
-                                      history[index]['total_sku_cases'],
-                                      style: const TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                              itemCount: history.length,
+                                    if (showCertifyButton)
+                                      Container(
+                                          margin:
+                                              const EdgeInsets.only(top: 10),
+                                          width: double.infinity,
+                                          child: Button(
+                                              onPressed: initiatefinalizeCount,
+                                              text: "Certify Counts")),
+                                  ]),
                             ),
                           ),
                         ),
