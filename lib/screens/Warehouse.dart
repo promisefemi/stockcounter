@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui' as BorderType;
 
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import 'package:stock_count_app/models/Location.dart';
 import 'package:stock_count_app/models/Model.dart';
 import 'package:stock_count_app/models/Sku.dart';
 import 'package:stock_count_app/models/Warehouse.dart';
+import 'package:stock_count_app/screens/Dashboard.dart';
 import 'package:stock_count_app/screens/Discrepancies.dart';
 
 import 'package:stock_count_app/util/constant.dart' as constant;
@@ -120,9 +122,26 @@ class _WarehousePageState extends State<WarehousePage> {
   final _extrasController = TextEditingController();
 
   String casePerPalletCount = "";
+  String totalCaseCount = "";
   @override
   void initState() {
     super.initState();
+    _extrasController.addListener(() {
+      if (formData.skuType == "FG") {
+        print("EXTRAS");
+        final extras = int.tryParse(_extrasController.text);
+        final casePerPallet = int.tryParse(casePerPalletCount);
+
+        print("NEW EXTRA -- $extras");
+        print("NEW CASE -- $casePerPallet");
+
+        if (extras == null || casePerPallet == null) return;
+        print("NEW TOTAL CASE --  ${(casePerPallet + extras).toString()}");
+        setState(() {
+          totalCaseCount = (casePerPallet + extras).toString();
+        });
+      }
+    });
     _palletCountController.addListener(() {
       final skuId = formData.skuId;
       if (skuId == null || skuId.isEmpty) return;
@@ -133,6 +152,7 @@ class _WarehousePageState extends State<WarehousePage> {
 
       final palletCount = int.tryParse(_palletCountController.text);
       final casePerPallet = int.tryParse(selectedSKU.casePerPallet);
+      final extras = int.tryParse(_extrasController.text) ?? 0;
 
       if (palletCount == null || casePerPallet == null) return;
 
@@ -140,6 +160,7 @@ class _WarehousePageState extends State<WarehousePage> {
 
       setState(() {
         casePerPalletCount = (casePerPallet * palletCount).toString();
+        totalCaseCount = ((casePerPallet * palletCount) + extras).toString();
       });
     });
 
@@ -461,10 +482,16 @@ class _WarehousePageState extends State<WarehousePage> {
     } else {
       showAlert(context, AlertState.error, "Something went wrong");
     }
+
     _resetForm();
     setState(() {
       savedFormData = [];
     });
+    print(isCreate);
+    if (!isCreate) {
+      print("IS CREATED");
+      Navigator.pushNamed(context, Dashboard.routeName);
+    }
   }
 
   _resetForm() {
@@ -475,6 +502,7 @@ class _WarehousePageState extends State<WarehousePage> {
       formData.extras = "";
       formData.countType = "GOOD";
       casePerPalletCount = "";
+      totalCaseCount = "";
     });
     _extrasController.clear();
     _palletCountController.clear();
@@ -489,11 +517,13 @@ class _WarehousePageState extends State<WarehousePage> {
     print(response['data']['discrepancies']);
     if (response['data']['discrepancies'] != null &&
         response['data']['discrepancies'].length > 0) {
-      Fluttertoast.showToast(
-        msg:
-            "There are ${response['data']['discrepancies'].length} discrepancies in the records",
-        toastLength: Toast.LENGTH_LONG,
-      );
+      if (Platform.isAndroid || Platform.isIOS) {
+        Fluttertoast.showToast(
+          msg:
+              "There are ${response['data']['discrepancies'].length} discrepancies in the records",
+          toastLength: Toast.LENGTH_LONG,
+        );
+      }
     }
   }
 
@@ -517,6 +547,7 @@ class _WarehousePageState extends State<WarehousePage> {
           builder: (context, setModalState) {
             if (_palletListener != null) {
               _palletCountController.removeListener(_palletListener!);
+              _extrasController.removeListener(_palletListener!);
             }
             _palletListener = () {
               if (Navigator.of(context).canPop()) {
@@ -524,6 +555,7 @@ class _WarehousePageState extends State<WarehousePage> {
               }
             };
             _palletCountController.addListener(_palletListener!);
+            _extrasController.addListener(_palletListener!);
 
             return SafeArea(
               child: Padding(
@@ -571,140 +603,6 @@ class _WarehousePageState extends State<WarehousePage> {
           },
         );
       },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Layout(
-      appBar: AppBar(
-        title: Text(
-          currentSectionTitle,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-        foregroundColor: Colors.white,
-        backgroundColor: constant.primaryColor,
-        actions: [
-          if (isCreate && currentSection == 3) _buildPositionedBottomPill()
-        ],
-      ),
-      floatingActionButton: (isCreate && currentSection == 3)
-          ? Padding(
-              padding: const EdgeInsets.only(bottom: 120),
-              child: FloatingActionButton(
-                onPressed: _initiateSKUAddition,
-                backgroundColor: constant.appDark, // background
-                child: const Icon(Icons.add, size: 20, color: Colors.white),
-              ),
-            )
-          : null,
-      child: Column(
-        children: [
-          if (warehouse['selected'].id != "" ||
-              location['selected'].id != "" ||
-              bins['selected'].id != "")
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                  border: Border.all(width: 1, color: Colors.black12),
-                  borderRadius: BorderRadius.circular(10)),
-              margin: const EdgeInsets.only(bottom: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  if (warehouse['selected'].id != "")
-                    Text(
-                      "Selected Counting Area: ${warehouse['selected'].name}",
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w500, fontSize: 16),
-                    ),
-                  if (location['selected'].id != "")
-                    Text(
-                      "Selected Location: ${location['selected'].name}",
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w500, fontSize: 16),
-                    ),
-                  if (bins['selected'].id != "")
-                    Text(
-                      "Selected Bin: ${bins['selected'].name}",
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w500, fontSize: 16),
-                    )
-                ],
-              ),
-            ),
-          Expanded(
-            child: PageView(
-              controller: _pageViewController,
-              scrollDirection: Axis.horizontal,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                WarehousePageList(
-                  loading: warehouse['loading'],
-                  list: warehouse['data'].data,
-                  selected: warehouse['selected'],
-                  selectMethod: (index) {
-                    setState(() {
-                      warehouse['selected'] = warehouse['data'].data[index];
-                    });
-                  },
-                ),
-                // LocationPageList(
-                //   loading: location['loading'],
-                //   list: location['data'].data,
-                //   selected: location['selected'],
-                //   selectMethod: (index) {
-                //     setState(() {
-                //       location['selected'] = location['data'].data[index];
-                //     });
-                //   },
-                // ),
-                BinPageList(
-                  loading: bins['loading'],
-                  list: bins['data'].data,
-                  selected: bins['selected'],
-                  selectMethod: (index) {
-                    setState(() {
-                      bins['selected'] = bins['data'].data[index];
-                    });
-                  },
-                ),
-                //SELECT SKU TYPE
-
-                if (isCreate)
-                  buildSheetPage()
-                else if (formData.skuType == "FG")
-                  buildSKUForm(null)
-                else
-                  buildNFGSKUForm(null),
-
-                // buildSKUForm(),
-                // buildNFGSKUForm(),
-              ],
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              if (currentSection != 1 && goback && currentSection != 3)
-                Expanded(
-                  child: Button(
-                      onPressed: _previousSection,
-                      style: constant.buttonSecondary,
-                      text: "Previous"),
-                ),
-              const SizedBox(
-                width: 10,
-              ),
-              if (currentSection != 3)
-                Expanded(child: Button(onPressed: _nextSection, text: "Next"))
-              else if ((isCreate && savedFormData.length > 0) || !isCreate)
-                Expanded(child: Button(onPressed: submitCount, text: "Submit"))
-            ],
-          )
-        ],
-      ),
     );
   }
 
@@ -855,31 +753,6 @@ class _WarehousePageState extends State<WarehousePage> {
                     ),
                   ),
                 ),
-                //  / InkWell(
-                // onTap: () {
-                // print("Scanning barcode");
-                // Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //       builder: (context) => QrcodeScanner(
-                //         callback: (result) {
-                //           print(result);
-                //           print("asdkfsldkksd");
-                //         },
-                //         text: "Scan SKU Barcode",
-                //       ),
-                //     ));
-                //   },
-                //   child: Container(
-                //     padding: const EdgeInsets.symmetric(
-                //         horizontal: 12, vertical: 14),
-                //     decoration: BoxDecoration(
-                //       border: Border.all(color: Colors.black12),
-                //       borderRadius: BorderRadius.circular(10),
-                //     ),
-                //     child: const Icon(Icons.qr_code),
-                //   ),
-                // )
               ],
             ),
             if (selectedSKU() != null) ...[
@@ -903,7 +776,7 @@ class _WarehousePageState extends State<WarehousePage> {
             ],
             const SizedBox(height: 10),
             const Text(
-              "Pallet Count",
+              "Full Pallet Counted",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             CustomTextField.withController(
@@ -933,7 +806,7 @@ class _WarehousePageState extends State<WarehousePage> {
             ],
             const SizedBox(height: 10),
             const Text(
-              "Cases",
+              "Non-full pallet cases counted",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             CustomTextField.withController(
@@ -942,6 +815,19 @@ class _WarehousePageState extends State<WarehousePage> {
               keyboardType: TextInputType.number,
               hintText: "Enter count in cases",
             ),
+            const SizedBox(height: 10),
+            if (totalCaseCount.isNotEmpty) ...[
+              const Text(
+                "Total cases",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              CustomTextField.withOnChanged(
+                onChanged: (value) {},
+                enabled: false,
+                borderRadius: 10,
+                hintText: totalCaseCount,
+              ),
+            ],
             const SizedBox(height: 10),
             const Text(
               "Count Type",
@@ -1071,7 +957,7 @@ class _WarehousePageState extends State<WarehousePage> {
           ),
           const SizedBox(height: 10),
           const Text(
-            "Cases",
+            "Quantity",
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           CustomTextField.withController(
@@ -1191,8 +1077,13 @@ class _WarehousePageState extends State<WarehousePage> {
                     // Delete icon
                     IconButton(
                       onPressed: () {
-                        setState(() {
-                          savedFormData.removeAt(index);
+                        showAlert(context, AlertState.info,
+                            "Are you sure you want to remove this count?",
+                            title: "Kindly Confirm",
+                            showCancel: true, okCallback: () {
+                          setState(() {
+                            savedFormData.removeAt(index);
+                          });
                         });
                       },
                       icon: Icon(Icons.delete, color: Colors.white),
@@ -1207,6 +1098,140 @@ class _WarehousePageState extends State<WarehousePage> {
               );
             },
           );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Layout(
+      appBar: AppBar(
+        title: Text(
+          currentSectionTitle,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        ),
+        foregroundColor: Colors.white,
+        backgroundColor: constant.primaryColor,
+        actions: [
+          if (isCreate && currentSection == 3) _buildPositionedBottomPill()
+        ],
+      ),
+      floatingActionButton: (isCreate && currentSection == 3)
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 120),
+              child: FloatingActionButton(
+                onPressed: _initiateSKUAddition,
+                backgroundColor: constant.appDark, // background
+                child: const Icon(Icons.add, size: 20, color: Colors.white),
+              ),
+            )
+          : null,
+      child: Column(
+        children: [
+          if (warehouse['selected'].id != "" ||
+              location['selected'].id != "" ||
+              bins['selected'].id != "")
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                  border: Border.all(width: 1, color: Colors.black12),
+                  borderRadius: BorderRadius.circular(10)),
+              margin: const EdgeInsets.only(bottom: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  if (warehouse['selected'].id != "")
+                    Text(
+                      "Selected Counting Area: ${warehouse['selected'].name}",
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w500, fontSize: 16),
+                    ),
+                  if (location['selected'].id != "")
+                    Text(
+                      "Selected Location: ${location['selected'].name}",
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w500, fontSize: 16),
+                    ),
+                  if (bins['selected'].id != "")
+                    Text(
+                      "Selected Bin: ${bins['selected'].name}",
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w500, fontSize: 16),
+                    )
+                ],
+              ),
+            ),
+          Expanded(
+            child: PageView(
+              controller: _pageViewController,
+              scrollDirection: Axis.horizontal,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                WarehousePageList(
+                  loading: warehouse['loading'],
+                  list: warehouse['data'].data,
+                  selected: warehouse['selected'],
+                  selectMethod: (index) {
+                    setState(() {
+                      warehouse['selected'] = warehouse['data'].data[index];
+                    });
+                  },
+                ),
+                // LocationPageList(
+                //   loading: location['loading'],
+                //   list: location['data'].data,
+                //   selected: location['selected'],
+                //   selectMethod: (index) {
+                //     setState(() {
+                //       location['selected'] = location['data'].data[index];
+                //     });
+                //   },
+                // ),
+                BinPageList(
+                  loading: bins['loading'],
+                  list: bins['data'].data,
+                  selected: bins['selected'],
+                  selectMethod: (index) {
+                    setState(() {
+                      bins['selected'] = bins['data'].data[index];
+                    });
+                  },
+                ),
+                //SELECT SKU TYPE
+
+                if (isCreate)
+                  buildSheetPage()
+                else if (formData.skuType == "FG")
+                  buildSKUForm(null)
+                else
+                  buildNFGSKUForm(null),
+
+                // buildSKUForm(),
+                // buildNFGSKUForm(),
+              ],
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              if (currentSection != 1 && goback && currentSection != 3)
+                Expanded(
+                  child: Button(
+                      onPressed: _previousSection,
+                      style: constant.buttonSecondary,
+                      text: "Previous"),
+                ),
+              const SizedBox(
+                width: 10,
+              ),
+              if (currentSection != 3)
+                Expanded(child: Button(onPressed: _nextSection, text: "Next"))
+              else if ((isCreate && savedFormData.length > 0) || !isCreate)
+                Expanded(child: Button(onPressed: submitCount, text: "Submit"))
+            ],
+          )
+        ],
+      ),
+    );
   }
 }
 

@@ -317,7 +317,11 @@ class Api {
           ? (response['responseBody']['message'] ??
               response['responseBody']['messages']?['error'] ??
               "Unknown error")
-          : response['responseBody'].toString(), // Safe cast
+          : response['responseBody'].toString(),
+
+      "data": response['responseBody'] is Map
+          ? (response['responseBody']['data'])
+          : null, // Safe cast
       "statusCode": response['statusCode']
     };
   }

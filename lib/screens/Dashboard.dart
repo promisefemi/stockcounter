@@ -33,6 +33,7 @@ class _DashboardState extends State<Dashboard> {
   int totalSKUcount = 0;
   bool showDiscrepancyButton = false;
   bool showCertifyButton = true;
+  bool checkingCertificationStatus = true;
   List history = [];
 
   @override
@@ -133,7 +134,9 @@ class _DashboardState extends State<Dashboard> {
     if (response == null) {
       return;
     }
-
+    setState(() {
+      checkingCertificationStatus = false;
+    });
     if (response['status']) {
       setState(() {
         showCertifyButton = false;
@@ -158,11 +161,39 @@ class _DashboardState extends State<Dashboard> {
         return;
       }
 
+      print("SKUS");
       print(response);
       if (response['status']) {
         showAlert(context, AlertState.success, response['message']);
+        setState(() {
+          showCertifyButton = false;
+        });
       } else {
-        showAlert(context, AlertState.error, response['message']);
+        Widget? extras;
+
+        if (response['data'] != null) {
+          List skus = response['data'];
+
+          extras = Container(
+            constraints: const BoxConstraints(maxHeight: 200),
+            child: SingleChildScrollView(
+              child: Column(
+                children: skus
+                    .map((sku) => Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            "${sku['name']} (Type: ${sku['count_type']})",
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
+                          ),
+                        ))
+                    .toList(),
+              ),
+            ),
+          );
+        }
+        showAlert(context, AlertState.error, response['message'],
+            extras: extras);
       }
     });
   }
@@ -419,6 +450,7 @@ class _DashboardState extends State<Dashboard> {
                               onPressed: () {
                                 _getDashboard();
                                 checkForDiscrepancies();
+                                checkForUserTeamCountingStatus();
                               },
                               child: const Text(
                                 "Refresh",
@@ -507,6 +539,8 @@ class _DashboardState extends State<Dashboard> {
                                                   BorderRadius.circular(5)),
                                           child: ListTile(
                                             onTap: () {
+                                              if (checkingCertificationStatus ||
+                                                  !showCertifyButton) return;
                                               Navigator.of(context).push(
                                                   MaterialPageRoute(
                                                       builder: (context) {

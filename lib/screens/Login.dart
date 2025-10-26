@@ -68,6 +68,7 @@ class _LoginPageState extends State<LoginPage> {
       ApiResponse<Login>? response =
           await Api.instance.login(_username, _password);
 
+      print(response);
       setState(() {
         _isLoading = false;
       });

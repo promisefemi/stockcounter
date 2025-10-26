@@ -9,6 +9,7 @@ showAlert(
   AlertState type,
   String body, {
   String? title = "",
+  Widget? extras,
   String okText = "Ok",
   bool showCancel = false,
   String cancelText = "Cancel",
@@ -120,6 +121,7 @@ showAlert(
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 16),
           ),
+          if (extras != null) ...[const SizedBox(height: 20), extras],
         ],
       ),
     ),

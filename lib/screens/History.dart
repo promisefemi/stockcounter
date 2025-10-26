@@ -174,7 +174,8 @@ class _HistoryPageState extends State<HistoryPage> {
       print(response);
       if (response != null) {
         if (response['status'] == true) {
-          history[index]['delete_requested'] = true;
+          history.removeAt(index);
+          // history[index]['delete_requested'] = true;
           showAlert(
               context, AlertState.success, "Count removal request successful");
           setState(() {});
