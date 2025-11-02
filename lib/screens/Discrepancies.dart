@@ -125,9 +125,9 @@ class _DiscrepancyPageState extends State<DiscrepancyPage> {
                               Text(
                                   "Resolved: ${discrepancies[index]['resolved'] == '0' ? 'NO' : 'YES'}"),
                               Text(
-                                  "Pallet discrepancy amount: ${discrepancies[index]['pallet_discrepancy_amount']}"),
+                                  "Full pallet cases discrepancy amount: ${discrepancies[index]['pallet_discrepancy_amount']}"),
                               Text(
-                                  "Extras discrepancy amount: ${discrepancies[index]['extras_discrepancy_amount']}"),
+                                  "${discrepancies[index]['sku_type'] == 'FG' ? 'Non-Full pallet cases discrepancy ' : 'Quantity'} discrepancy : ${discrepancies[index]['extras_discrepancy_amount']}"),
                             ],
                           ),
                         ),

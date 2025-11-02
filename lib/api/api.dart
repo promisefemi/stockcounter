@@ -16,8 +16,8 @@ import "package:stock_count_app/models/Model.dart";
 
 // ignore: constant_identifier_names
 
-// const BaseUrl = "http://192.168.1.215:8080/";
-const BaseUrl = "https://stockcount.ciphernet.net/";
+const BaseUrl = "http://192.168.1.215:8080/";
+// const BaseUrl = "https://stockcount.ciphernet.net/";
 
 class Api {
   String _apiKey = '';

@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:stock_count_app/api/api.dart';
 import 'package:stock_count_app/components/Layout.dart';
@@ -10,7 +8,6 @@ import 'package:stock_count_app/util/constant.dart' as constant;
 import 'package:stock_count_app/util/dialog.dart';
 import 'package:stock_count_app/util/shared_preference_helper.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class HistoryPage extends StatefulWidget {
@@ -310,10 +307,11 @@ class _HistoryPageState extends State<HistoryPage> {
                                               if (d['created_at'] != null)
                                                 _buildTableRow(
                                                     "Date:", d['created_at']),
-                                              _buildTableRow("Pallet amount:",
+                                              _buildTableRow(
+                                                  "Full Pallet Counted:",
                                                   d['pallet_count']),
                                               _buildTableRow(
-                                                  "Extras:", d['extras']),
+                                                  "Quantity:", d['extras']),
                                               _buildTableRow(
                                                   "Date:", d['timestamp']),
                                             ],

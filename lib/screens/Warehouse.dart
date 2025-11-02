@@ -973,7 +973,7 @@ class _WarehousePageState extends State<WarehousePage> {
   }
 
   Widget buildSheetPage() {
-    return savedFormData.length <= 0
+    return savedFormData.isEmpty
         ? Padding(
             padding: const EdgeInsets.only(top: 30),
             child: Column(children: [
@@ -1068,7 +1068,7 @@ class _WarehousePageState extends State<WarehousePage> {
                           // ),
                           SizedBox(height: 4),
                           Text(
-                            '${item.skuType == "FG" ? "Pallets: ${item.palletCount}   |  " : ""}Cases: ${item.extras}',
+                            '${item.skuType == "FG" ? "Full Pallet Counted: ${item.palletCount}   |  " : ""} ${item.skuType == "FG" ? "Non-full pallet cases counted:" : "Quantity:"} ${item.extras}',
                             style: TextStyle(color: Colors.grey[600]),
                           ),
                         ],
