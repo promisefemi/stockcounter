@@ -556,6 +556,11 @@ class _DashboardState extends State<Dashboard> {
                                                       ['sku_id'],
                                                   count_type: history[index]
                                                       ['count_type'],
+                                                  former_pallet_count:
+                                                      history[index]
+                                                          ['pallet_count'],
+                                                  former_extra_count:
+                                                      history[index]['extras'],
                                                 );
                                               }));
                                             },

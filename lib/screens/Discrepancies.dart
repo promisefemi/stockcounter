@@ -111,6 +111,10 @@ class _DiscrepancyPageState extends State<DiscrepancyPage> {
                                   sku_id: discrepancies[index]['sku_id'],
                                   count_type: discrepancies[index]
                                       ['count_type'],
+                                  former_pallet_count: discrepancies[index]
+                                      ['former_sku_pallet_count'],
+                                  former_extra_count: discrepancies[index]
+                                      ['former_sku_extras'],
                                 );
                               }));
                             }

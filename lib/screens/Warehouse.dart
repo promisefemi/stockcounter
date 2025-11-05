@@ -75,6 +75,8 @@ class WarehousePage extends StatefulWidget {
     this.bin_id,
     this.sku_id,
     this.count_type,
+    this.former_pallet_count,
+    this.former_extra_count,
   });
   static const routeName = "/WarehousePage";
 
@@ -83,6 +85,8 @@ class WarehousePage extends StatefulWidget {
   final String? bin_id;
   final String? sku_id;
   final String? count_type;
+  final String? former_pallet_count;
+  final String? former_extra_count;
 
   @override
   State<WarehousePage> createState() => _WarehousePageState();
@@ -179,6 +183,8 @@ class _WarehousePageState extends State<WarehousePage> {
     final prefs = await SharedPreferencesHelper.getInstance();
     var userMap = prefs.getMap(constant.userKey);
     print(userMap);
+
+    print(widget.former_pallet_count);
     if (userMap != null) {
       setState(() {
         user = User.fromJson(userMap);
@@ -783,8 +789,27 @@ class _WarehousePageState extends State<WarehousePage> {
               controller: _palletCountController,
               borderRadius: 10,
               keyboardType: TextInputType.number,
-              hintText: "Enter count in pallets",
+              hintText: " Enter count in pallets",
             ),
+            if (widget.former_pallet_count != null) ...[
+              const SizedBox(
+                height: 3,
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  "Previous Full pallet count: ${widget.former_pallet_count.toString()}",
+                  style: const TextStyle(
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ],
             if (casePerPalletCount.isNotEmpty) ...[
               const SizedBox(
                 height: 3,
@@ -815,6 +840,25 @@ class _WarehousePageState extends State<WarehousePage> {
               keyboardType: TextInputType.number,
               hintText: "Enter count in cases",
             ),
+            if (widget.former_extra_count != null) ...[
+              const SizedBox(
+                height: 3,
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  "Previous Non-Full pallet count: ${widget.former_extra_count.toString()}",
+                  style: const TextStyle(
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 10),
             if (totalCaseCount.isNotEmpty) ...[
               const Text(

@@ -311,7 +311,8 @@ class _HistoryPageState extends State<HistoryPage> {
                                                   "Full Pallet Counted:",
                                                   d['pallet_count']),
                                               _buildTableRow(
-                                                  "Quantity:", d['extras']),
+                                                  "${d['sku_type'] == 'NFG' ? 'Non Full Pallet count' : 'Quantity'}:",
+                                                  d['extras']),
                                               _buildTableRow(
                                                   "Date:", d['timestamp']),
                                             ],
